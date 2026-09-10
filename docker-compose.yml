@@ -1,0 +1,16 @@
+services:
+  serving:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_NAME: ${MODEL_NAME:-distilgpt2}
+      DEVICE: ${DEVICE:-cuda}
+      MAX_BATCH_SIZE: ${MAX_BATCH_SIZE:-8}
+      MAX_WAIT_MS: ${MAX_WAIT_MS:-20}
+    gpus: all
+    volumes:
+      - hf_cache:/app/.hf_cache
+
+volumes:
+  hf_cache:
