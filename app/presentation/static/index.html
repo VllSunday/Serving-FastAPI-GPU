@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LLM Serving Lab</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="LLM Serving Lab">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span><strong>Serving Lab</strong><small>FastAPI × PyTorch</small></span>
+      </a>
+      <div class="server-status" aria-live="polite">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="server-status">Проверяем сервер…</span>
+        <a href="/docs" target="_blank" rel="noreferrer">OpenAPI</a>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <nav class="mode-nav" aria-label="Стратегии сервинга">
+        <p class="nav-title">Режим</p>
+        <button class="mode-button active" data-mode="realtime">
+          <span class="mode-icon">1</span><span>Realtime<small>один → один</small></span>
+        </button>
+        <button class="mode-button" data-mode="batch">
+          <span class="mode-icon">2</span><span>Offline batch<small>job → polling</small></span>
+        </button>
+        <button class="mode-button" data-mode="dynamic">
+          <span class="mode-icon">3</span><span>Continuous<small>очередь → batch</small></span>
+        </button>
+        <button class="mode-button" data-mode="stream">
+          <span class="mode-icon">4</span><span>Streaming<small>ответ частями</small></span>
+        </button>
+      </nav>
+
+      <main>
+        <section class="lesson-head">
+          <div>
+            <p class="endpoint" id="endpoint">POST /generate</p>
+            <h1 id="mode-title">Online realtime</h1>
+            <p id="mode-summary">Запрос сразу занимает модель и возвращается только после полной генерации.</p>
+          </div>
+          <div class="mode-fact">
+            <span id="tradeoff-label">Главный приоритет</span>
+            <strong id="tradeoff-value">минимальная latency</strong>
+          </div>
+        </section>
+
+        <section class="trace-panel" aria-labelledby="trace-title">
+          <div class="section-line">
+            <h2 id="trace-title">Трасса запроса</h2>
+            <span id="trace-state">готово к запуску</span>
+          </div>
+          <div class="pipeline" id="pipeline">
+            <div class="stage" data-stage="client"><span>01</span><strong>Client</strong><small>HTTP request</small></div>
+            <i aria-hidden="true"></i>
+            <div class="stage" data-stage="queue"><span>02</span><strong>Queue</strong><small>ожидание</small></div>
+            <i aria-hidden="true"></i>
+            <div class="stage" data-stage="model"><span>03</span><strong>Model</strong><small>generate()</small></div>
+            <i aria-hidden="true"></i>
+            <div class="stage" data-stage="response"><span>04</span><strong>Response</strong><small>HTTP body</small></div>
+          </div>
+        </section>
+
+        <div class="lab-grid">
+          <section class="experiment-panel">
+            <div class="section-line">
+              <h2>Эксперимент</h2>
+              <button class="text-button" id="fill-example" type="button">Подставить пример</button>
+            </div>
+
+            <label for="prompt" id="prompt-label">Prompt</label>
+            <textarea id="prompt" rows="5">Explain why GPU batching improves throughput in simple terms.</textarea>
+
+            <div class="controls-row">
+              <label>Новых токенов<input id="max-tokens" type="number" min="1" max="128" value="32" /></label>
+              <label id="concurrency-control" hidden>Запросов одновременно<input id="concurrency" type="number" min="2" max="16" value="4" /></label>
+            </div>
+
+            <button class="run-button" id="run" type="button"><span>Запустить realtime</span><kbd>Ctrl ↵</kbd></button>
+            <p class="form-hint" id="form-hint">Ответ появится целиком: промежуточных частей клиент не увидит.</p>
+          </section>
+
+          <aside class="inspection-panel">
+            <h2>Что наблюдать</h2>
+            <ol id="observations"></ol>
+            <div class="config-readout">
+              <div><span>max batch</span><strong id="max-batch">—</strong></div>
+              <div><span>wait window</span><strong id="wait-window">—</strong></div>
+              <div><span>queue now</span><strong id="queue-size">—</strong></div>
+            </div>
+          </aside>
+        </div>
+
+        <section class="results-panel" aria-live="polite">
+          <div class="section-line">
+            <h2>Результат</h2>
+            <span id="result-caption">ещё нет запуска</span>
+          </div>
+          <div class="metrics" id="metrics">
+            <div><span>total</span><strong>—</strong></div>
+            <div><span>queue</span><strong>—</strong></div>
+            <div><span>inference</span><strong>—</strong></div>
+            <div><span>batch size</span><strong>—</strong></div>
+          </div>
+          <div class="output" id="output"><p class="empty">Запустите эксперимент — здесь появится ответ модели и технические детали.</p></div>
+        </section>
+
+        <section class="event-log">
+          <div class="section-line"><h2>Журнал событий</h2><button class="text-button" id="clear-log" type="button">Очистить</button></div>
+          <div id="log" role="log"><p><time>—</time><span>Лаборатория готова</span></p></div>
+        </section>
+      </main>
+    </div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

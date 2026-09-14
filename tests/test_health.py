@@ -5,6 +5,13 @@ def test_health(client):
     assert body["status"] == "ok"
     assert body["device"] in {"cpu", "cuda"}
     assert body["model"]
+    assert len(body["strategies"]) == 4
+
+
+def test_dashboard(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "LLM Serving Lab" in response.text
 
 
 def test_gpu(client):

@@ -12,12 +12,11 @@
 - `padding_side = "left"` для decoder-only модели
 - `pad_token = eos_token` у GPT-2
 
-2. Вызовите явный batch endpoint:
+2. Вызовите offline batch client. Он отдельно покажет HTTP 202, polling и
+   итоговый `inference_ms`:
 
 ```bash
-curl -X POST http://localhost:8000/generate/batch \
-  -H 'Content-Type: application/json' \
-  -d '{"prompts":["Explain FastAPI","Explain CUDA","Explain batching"],"max_new_tokens":64}'
+python client/offline_batch_client.py --max-new-tokens 64
 ```
 
 3. Сравните batch size.
@@ -31,8 +30,8 @@ curl -X POST http://localhost:8000/generate/batch \
 | 4 | | | |
 | 8 | | | |
 
-Для `batch=1` используйте `/generate` или `/generate/batch` с одним prompt.
-Для остальных — `/generate/batch`.
+Для `batch=1` используйте `/generate`. Для остальных отправляйте job через
+`/batch` и берите `inference_ms` из `GET /batch/{job_id}`.
 
 4. Сделайте второй эксперимент: один короткий prompt и один очень длинный в одном batch. Сравните latency с batch из двух коротких.
 
@@ -55,11 +54,11 @@ curl -X POST http://localhost:8000/generate/batch \
 ## Вопросы
 
 1. Почему для causal LM обычно ставят left padding?
-2. Почему 8 отдельных `/generate` медленнее одного `/generate/batch` с 8 prompt?
+2. Почему 8 отдельных `/generate` медленнее одного offline job с 8 prompt?
 3. Когда большой batch вреден?
 
 ## Критерий готовности
 
-- `/generate/batch` возвращает `results`, `batch_size`, `latency_ms`
+- `/batch` возвращает HTTP 202 и job id, а status endpoint — results и inference time
 - есть таблица для 1 / 2 / 4 / 8
 - вы можете объяснить padding и VRAM

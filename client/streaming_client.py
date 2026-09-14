@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 
 import httpx
 
@@ -21,10 +22,19 @@ def main() -> None:
     ) as response:
         response.raise_for_status()
         print("--- stream ---")
-        for chunk in response.iter_text():
-            if chunk:
-                print(chunk, end="", flush=True)
-        print("\n--- done ---")
+        event = "message"
+        for line in response.iter_lines():
+            if line.startswith("event:"):
+                event = line.removeprefix("event:").strip()
+            elif line.startswith("data:"):
+                data = json.loads(line.removeprefix("data:").strip())
+                if event == "token":
+                    print(data["delta"], end="", flush=True)
+                elif event == "done":
+                    print(
+                        f"\n--- done: chunks={data['chunks']} "
+                        f"latency_ms={data['latency_ms']} ---"
+                    )
 
 
 if __name__ == "__main__":

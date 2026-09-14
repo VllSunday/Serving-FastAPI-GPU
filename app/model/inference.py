@@ -28,7 +28,11 @@ def generate_one(
             pad_token_id=bundle.tokenizer.pad_token_id,
         )
     latency_ms = (time.perf_counter() - started) * 1000
-    text = bundle.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    prompt_length = encoded["input_ids"].shape[1]
+    text = bundle.tokenizer.decode(
+        output_ids[0, prompt_length:],
+        skip_special_tokens=True,
+    )
     return text, latency_ms
 
 
@@ -54,5 +58,9 @@ def generate_batch(
             pad_token_id=bundle.tokenizer.pad_token_id,
         )
     latency_ms = (time.perf_counter() - started) * 1000
-    texts = bundle.tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+    prompt_length = encoded["input_ids"].shape[1]
+    texts = bundle.tokenizer.batch_decode(
+        output_ids[:, prompt_length:],
+        skip_special_tokens=True,
+    )
     return texts, latency_ms

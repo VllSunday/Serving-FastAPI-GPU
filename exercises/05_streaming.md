@@ -1,62 +1,59 @@
 # Exercise 5 — Streaming
 
-Цель: отдать токены по мере генерации, не дожидаясь конца последовательности.
+Цель: получить первые части текста до завершения всей последовательности и не
+заблокировать FastAPI event loop.
 
-Endpoint: `POST /generate/stream`
+Endpoint: `POST /generate/stream`.
 
-## Что сделать
+## Разбор кода
 
-1. Прочитайте `app/serving/streaming.py`.
+Откройте два уровня:
 
-Там есть TODO:
+- `app/application/serving/streaming.py` превращает chunks в SSE events;
+- `app/infrastructure/transformers_engine.py` запускает Hugging Face
+  `TextIteratorStreamer` и `model.generate()` в отдельном thread.
 
-```python
-# TODO(student):
-# stream tokens to the client before the full sequence is ready
-# do not block the event loop with model.generate()
-```
-
-2. Запустите клиент:
-
-```bash
-python client/streaming_client.py --prompt "Hello, how are you"
-```
-
-Вы должны видеть растущий текст:
+Путь данных:
 
 ```text
-Hello
-Hello,
-Hello, how
-Hello, how are
-...
+generation thread → TextIteratorStreamer → async generator → StreamingResponse
 ```
 
-Сервер шлёт накопленную строку после каждого куска. Это удобнее для занятия, чем сырые дельты.
+Сервер отправляет события `start`, `token`, `done`. В `token` находятся:
 
-3. Перепишите генератор сами:
+- `delta` — новый decoded chunk;
+- `text` — накопленный текст;
+- `elapsed_ms` — время с начала запроса.
 
-- FastAPI `StreamingResponse`
-- Hugging Face `TextIteratorStreamer` или эквивалент
-- `model.generate()` в отдельном thread
-- event loop не должен стоять на всём generate
+Chunk не обязан совпадать с одним tokenizer token: streamer может буферизовать
+текст до удобной границы декодирования.
 
-4. Пока стримится один запрос, откройте второй терминал и дерните `/health`. Сервер должен ответить, не дожидаясь конца генерации.
+## Запуск
 
-## Почему нельзя просто вызвать generate в async def
+```bash
+python client/streaming_client.py --prompt "Explain token streaming"
+```
 
-`model.generate()` — синхронный и долгий. Если вызвать его прямо в coroutine, event loop замирает: другие HTTP-запросы, health, batcher — всё ждёт.
+Во втором терминале во время длинной генерации вызовите:
 
-Поэтому generation уезжает в thread, а async-генератор только забирает готовые куски через `asyncio.to_thread(next, iterator)`.
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Health должен ответить до завершения stream. Если вызвать синхронный
+`model.generate()` прямо в coroutine, весь event loop будет ждать.
 
 ## Вопросы
 
-1. Чем streaming отличается от `/generate` с точки зрения latency до первого токена?
-2. Почему streamer + thread, а не один большой `return text`?
-3. Можно ли честно стримить и одновременно динамически батчить одну и ту же генерацию? Что здесь сломается?
+1. Чем TTFT отличается от total latency?
+2. Почему streaming улучшает восприятие скорости, но не ускоряет вычисления?
+3. Зачем нужны `Cache-Control: no-cache` и `X-Accel-Buffering: no`?
+4. Почему честно совместить streaming и простой request-level dynamic batcher
+   сложнее, чем реализовать их отдельно?
 
 ## Критерий готовности
 
-- клиент печатает текст порциями, не одним блобом в конце
-- `/health` отвечает во время стрима
-- вы можете указать, какой код не блокирует event loop
+- текст появляется частями до события `done`;
+- dashboard показывает TTFT и количество chunks;
+- `/health` отвечает во время stream;
+- вы можете показать строку, которая переносит generation из event loop.

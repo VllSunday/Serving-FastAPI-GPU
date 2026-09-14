@@ -1,109 +1,66 @@
-# Exercise 4 — Dynamic batching
+# Exercise 4 — Continuous batching
 
-Это центральная часть занятия.
-
-Клиенты не умеют и не должны склеивать свои запросы. HTTP слой принимает обычный single-request, а GPU получает batch.
-
-```text
-Request 1 ─┐
-Request 2 ─┤
-Request 3 ─┼──→ Queue ──→ Batcher ──→ GPU
-Request 4 ─┘
-```
-
-Endpoint: `POST /generate/dynamic`
-
-Снаружи как `/generate`. Внутри:
+Это центральная часть занятия. Клиенты не склеивают запросы сами: API принимает
+обычный single request, а серверный scheduler превращает конкурентные запросы в
+один tensor batch.
 
 ```text
-HTTP
- ↓
-asyncio.Queue
- ↓
-dynamic batcher
- ↓
-batch inference
- ↓
-individual response
+Request 1 ─┐                      ┌→ Future 1 → response 1
+Request 2 ─┼→ asyncio.Queue → GPU ├→ Future 2 → response 2
+Request 3 ─┘                      └→ Future 3 → response 3
 ```
 
-## Что открыть
+Endpoint: `POST /generate/dynamic`.
 
-`app/serving/batcher.py`
+## Разбор кода
 
-Там оставлен учебный якорь:
+Откройте `app/application/serving/continuous_batch.py`:
 
-```python
-# TODO(student):
-# collect requests into a batch
-# respect MAX_BATCH_SIZE
-# respect MAX_WAIT_MS
-# execute one GPU inference
-# return each result to the correct request
-```
+1. `submit` создаёт `DynamicJob` и индивидуальный `Future`.
+2. `_collect_compatible` ждёт не дольше `MAX_WAIT_MS`, собирает не больше
+   `MAX_BATCH_SIZE` и не смешивает разные `max_new_tokens`.
+3. `_execute` вызывает `generate_batch` ровно один раз и раздаёт результаты по
+   соответствующим Future.
 
-В starter есть рабочая reference-реализация, чтобы занятие можно было показать целиком. Ваша задача — **не пользоваться ею вслепую**.
+Поставьте breakpoint перед `_execute` и посмотрите список `batch`. Убедитесь, что
+это не fake batching вида `for job: generate_one(job)`.
 
-## Задание
-
-1. Прочитайте `Batcher.submit`, `_collect_batch`, `_execute_and_return`.
-2. Удалите тела `_collect_batch` и `_execute_and_return`.
-3. Напишите их заново сами.
-
-Правила:
-
-- реальная `asyncio.Queue`, не список в endpoint
-- ждать не дольше `MAX_WAIT_MS`
-- если набралось `MAX_BATCH_SIZE` — запускать сразу
-- один вызов batched inference на пачку
-- результат `i` возвращается только запросу `i` через `Future`
-- это не цикл `for request in requests: generate_one(...)`
-
-4. В логе batcher должны быть строки вида:
-
-```text
-[batcher] batch_size=4 wait_ms=7.2
-[batcher] batch_size=8 wait_ms=12.4
-```
-
-5. Проверьте под нагрузкой:
+## Нагрузка
 
 ```bash
-python client/concurrent_client.py \
-  --requests 32 \
-  --concurrency 8 \
-  --endpoint /generate/dynamic
+python client/concurrent_client.py --requests 32 --concurrency 8 --endpoint /generate/dynamic
+python client/concurrent_client.py --requests 32 --concurrency 8 --endpoint /generate
 ```
 
-Сравните с тем же прогоном на `/generate`.
+В логе сервера ожидаются строки:
 
-6. Покрутите параметры:
+```text
+[continuous-batch] id=1a2b3c4d size=8 wait_ms=6.4 worker_ms=48.2
+```
+
+Проверьте `GET /batcher/stats` и сравните `last_batch_size`, `last_wait_ms`, p95
+и throughput.
+
+## Эксперимент с окном
 
 ```bash
-MAX_BATCH_SIZE=8 MAX_WAIT_MS=5 uvicorn app.main:app --host 0.0.0.0 --port 8000
-MAX_BATCH_SIZE=8 MAX_WAIT_MS=50 uvicorn app.main:app --host 0.0.0.0 --port 8000
+MAX_BATCH_SIZE=8 MAX_WAIT_MS=2 uvicorn app.main:app --port 8000
+MAX_BATCH_SIZE=8 MAX_WAIT_MS=50 uvicorn app.main:app --port 8000
 ```
 
-Маленький `MAX_WAIT_MS` → чаще `batch_size=1`, ниже extra-latency, хуже throughput.
-Большой `MAX_WAIT_MS` → крупнее batch, выше throughput, хуже tail latency.
-
-## Почему нужна очередь
-
-HTTP-запросы приходят независимо. GPU один. Если каждый request сразу зовёт `generate()`, вы получаете serial GPU calls и простой железа.
-
-Очередь развязывает lifetime HTTP-запроса и момент, когда GPU свободен набрать пачку.
-
-`async def` здесь только позволяет FastAPI принять много запросов, пока batcher ждёт. Сам CUDA kernel по-прежнему один.
+Малое окно уменьшает добавочную queue latency, но чаще даёт batch size 1.
+Большое окно повышает шанс широкого batch, но ухудшает tail latency.
 
 ## Вопросы
 
-1. Как результат не перепутается между клиентами?
-2. Что будет, если `MAX_WAIT_MS=0`?
-3. Почему fake batching (просто for-loop) не считается решением?
+1. Как `Future` не даёт перепутать ответы клиентов?
+2. Почему запросы с разными generation settings нельзя смешивать вслепую?
+3. Чем request-level batching отличается от iteration-level batching в vLLM?
+4. Почему `async def` сам по себе не ускоряет GPU inference?
 
 ## Критерий готовности
 
-- под concurrency=8 в логах бывает `batch_size>1`
-- `/batcher/stats` показывает `last_batch_size` и `last_wait_ms`
-- каждый клиент получает свой текст
-- вы написали collect/execute сами, а не только запустили готовое
+- под concurrency 8 появляется `batch_size > 1`;
+- несколько response имеют одинаковый `batch_id`;
+- каждый клиент получает текст для своего prompt;
+- вы можете объяснить latency/throughput trade-off окна ожидания.

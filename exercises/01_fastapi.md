@@ -24,7 +24,7 @@ python client/simple_client.py
 Прочитайте:
 
 - `app/main.py` — `/health` и `/generate`
-- `app/serving/simple.py`
+- `app/application/serving/realtime.py`
 - `app/model/inference.py` → `generate_one`
 
 Путь запроса:

@@ -24,8 +24,8 @@ python client/concurrent_client.py --requests 10 --concurrency 10 --endpoint /ge
 | batch size | latency_ms | notes |
 |---|---|---|
 | 1 | | `/generate` или batch из 1 prompt |
-| 4 | | `/generate/batch` |
-| 8 | | `/generate/batch` |
+| 4 | | offline job `/batch` |
+| 8 | | offline job `/batch` |
 
 И dynamic batching под нагрузкой:
 
@@ -36,7 +36,7 @@ python client/concurrent_client.py --requests 32 --concurrency 8 --endpoint /gen
 Смотрите серверные логи:
 
 ```text
-[batcher] batch_size=...
+[continuous-batch] id=... size=... wait_ms=... worker_ms=...
 ```
 
 и `GET /batcher/stats`.

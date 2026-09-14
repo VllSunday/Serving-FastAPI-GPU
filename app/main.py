@@ -1,122 +1,60 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
+from app.application.serving.continuous_batch import ContinuousBatchServing
+from app.application.serving.offline_batch import OfflineBatchServing
+from app.application.serving.realtime import RealtimeServing
+from app.application.serving.streaming import StreamingServing
 from app.config import settings
-from app.metrics import gpu_snapshot
-from app.model.inference import generate_batch
+from app.container import ServiceContainer
+from app.infrastructure.transformers_engine import TransformersEngine
 from app.model.loader import load_model
-from app.schemas import (
-    BatchGenerateRequest,
-    BatchGenerateResponse,
-    GenerateRequest,
-    GenerateResponse,
-    HealthResponse,
-)
-from app.serving.batcher import Batcher
-from app.serving.simple import run_simple
-from app.serving.streaming import stream_generate
+from app.presentation.api import router
 
-
-def _clamp_tokens(max_new_tokens: int) -> int:
-    return max(1, min(max_new_tokens, settings.max_new_tokens_cap))
+STATIC_DIR = Path(__file__).parent / "presentation" / "static"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    bundle = load_model()
-    app.state.bundle = bundle
-
-    def infer_fn(prompts: list[str], max_new_tokens: int) -> list[str]:
-        texts, _latency_ms = generate_batch(bundle, prompts, max_new_tokens)
-        return texts
-
-    batcher = Batcher(
-        infer_fn=infer_fn,
+    engine = TransformersEngine(load_model())
+    offline_batch = OfflineBatchServing(engine)
+    continuous_batch = ContinuousBatchServing(
+        engine,
         max_batch_size=settings.max_batch_size,
         max_wait_ms=settings.max_wait_ms,
     )
-    app.state.batcher = batcher
-    worker = asyncio.create_task(batcher.run())
+    app.state.services = ServiceContainer(
+        engine=engine,
+        realtime=RealtimeServing(engine),
+        offline_batch=offline_batch,
+        continuous_batch=continuous_batch,
+        streaming=StreamingServing(engine),
+    )
+    workers = [offline_batch.start(), continuous_batch.start()]
     try:
         yield
     finally:
-        await batcher.stop()
-        worker.cancel()
+        await offline_batch.stop()
+        await continuous_batch.stop()
+        await asyncio.gather(*workers, return_exceptions=True)
 
 
-app = FastAPI(title="GPU Serving Course", lifespan=lifespan)
+app = FastAPI(
+    title="LLM Serving Lab",
+    description="Four inspectable model-serving strategies behind one model runtime.",
+    lifespan=lifespan,
+)
+app.include_router(router)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-@app.get("/health", response_model=HealthResponse)
-def health(request: Request) -> HealthResponse:
-    bundle = request.app.state.bundle
-    return HealthResponse(
-        status="ok",
-        device=bundle.device,
-        gpu=bundle.gpu_name,
-        model=bundle.model_name,
-    )
-
-
-@app.get("/gpu")
-def gpu(request: Request) -> dict:
-    bundle = request.app.state.bundle
-    return gpu_snapshot(bundle.device)
-
-
-@app.get("/batcher/stats")
-def batcher_stats(request: Request) -> dict:
-    return request.app.state.batcher.stats()
-
-
-@app.post("/generate", response_model=GenerateResponse)
-def generate(payload: GenerateRequest, request: Request) -> GenerateResponse:
-    bundle = request.app.state.bundle
-    text, latency_ms = run_simple(
-        bundle,
-        payload.prompt,
-        _clamp_tokens(payload.max_new_tokens),
-    )
-    return GenerateResponse(text=text, latency_ms=round(latency_ms, 2))
-
-
-@app.post("/generate/batch", response_model=BatchGenerateResponse)
-def generate_batch_endpoint(
-    payload: BatchGenerateRequest,
-    request: Request,
-) -> BatchGenerateResponse:
-    bundle = request.app.state.bundle
-    texts, latency_ms = generate_batch(
-        bundle,
-        payload.prompts,
-        _clamp_tokens(payload.max_new_tokens),
-    )
-    return BatchGenerateResponse(
-        results=texts,
-        batch_size=len(payload.prompts),
-        latency_ms=round(latency_ms, 2),
-    )
-
-
-@app.post("/generate/dynamic", response_model=GenerateResponse)
-async def generate_dynamic(payload: GenerateRequest, request: Request) -> GenerateResponse:
-    batcher: Batcher = request.app.state.batcher
-    started = time.perf_counter()
-    text = await batcher.submit(payload.prompt, _clamp_tokens(payload.max_new_tokens))
-    latency_ms = (time.perf_counter() - started) * 1000
-    return GenerateResponse(text=text, latency_ms=round(latency_ms, 2))
-
-
-@app.post("/generate/stream")
-async def generate_stream(payload: GenerateRequest, request: Request) -> StreamingResponse:
-    bundle = request.app.state.bundle
-    return StreamingResponse(
-        stream_generate(bundle, payload.prompt, _clamp_tokens(payload.max_new_tokens)),
-        media_type="text/plain",
-    )
+@app.get("/", include_in_schema=False)
+def dashboard() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")

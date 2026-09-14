@@ -33,4 +33,15 @@ def test_generate_stream(client):
     ) as response:
         assert response.status_code == 200
         chunks = "".join(response.iter_text())
-    assert chunks.strip()
+    assert "event: start" in chunks
+    assert "event: token" in chunks
+    assert "event: done" in chunks
+
+
+def test_assignment_spelling_alias(client):
+    response = client.post(
+        "/generate/dinamic",
+        json={"prompt": "Hello", "max_new_tokens": 4},
+    )
+    assert response.status_code == 200
+    assert response.json()["mode"] == "dynamic"

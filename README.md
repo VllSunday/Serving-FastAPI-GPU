@@ -1,279 +1,118 @@
-# Serving: FastAPI + GPU
+# LLM Serving Lab: FastAPI + GPU
 
-Учебный репозиторий для занятия по inference-сервису.
+Учебный проект с четырьмя **реально различающимися** способами сервинга одной
+causal language model. Проект запускается на NVIDIA GPU или CPU и показывает
+очередь, batch size, latency, streaming chunks и жизненный цикл offline job.
 
-Вы поднимаете локальный FastAPI-сервер, гоняете небольшую causal LM на GPU (или CPU) и руками исследуете batch inference, dynamic batching, streaming и latency/throughput.
+Откройте `http://127.0.0.1:8000/` после запуска — dashboard позволяет пройти
+все эксперименты без ручного `curl`. OpenAPI остаётся на `/docs`.
 
-Это starter, а не готовый production-фреймворк. Инфраструктура уже запускается. Ключевые места помечены `TODO(student)` — их нужно понять, переписать и измерить.
+## Четыре стратегии
 
-## 1. Что мы строим
+| API | Механизм | Что оптимизируем |
+|---|---|---|
+| `POST /generate` | один request → один `generate()` → один JSON | latency одного запроса |
+| `POST /batch` | job id → фоновая очередь → один явный tensor batch | throughput без realtime SLA |
+| `POST /generate/dynamic` | независимые requests → короткое окно → общий batch | throughput при realtime API |
+| `POST /generate/stream` | generation thread → SSE `token` events | time to first token |
 
-```text
-Client
-  ↓
-FastAPI
-  ↓
-Queue
-  ↓
-Dynamic Batcher
-  ↓
-GPU
-  ↓
-Model
-```
+`POST /generate/dinamic` оставлен как скрытый alias для написания из задания.
+Старый `POST /generate/batch` тоже работает, но новый offline-контракт — `/batch`.
 
-Три режима inference:
-
-| Endpoint | Что происходит |
-|---|---|
-| `POST /generate` | один запрос → один `model.generate()` |
-| `POST /generate/batch` | клиент сам присылает список prompt |
-| `POST /generate/dynamic` | обычный single-request API, внутри очередь и batcher |
-
-## 2. Требования
-
-- Python 3.11+
-- NVIDIA GPU желательно, но не обязательно
-- NVIDIA drivers + CUDA (для GPU-пути)
-- Docker — optional
-
-Модель по умолчанию: `distilgpt2` (~82M параметров). Она помещается в обычную consumer GPU, быстро генерирует и даёт увидеть разницу между `batch=1` и `batch>1`.
+## Clean architecture
 
 ```text
-MODEL_NAME=distilgpt2
-DEVICE=auto
+presentation (FastAPI + browser UI)
+             ↓
+application/serving (4 use cases) → application/ports.py
+             ↓                            ↑
+domain (commands, results, job state)     │
+                                          │ implements
+infrastructure/transformers_engine.py ────┘
+             ↓
+model (Hugging Face loader + tensor inference)
 ```
 
-`DEVICE=auto` выбирает `cuda`, если CUDA доступна, иначе `cpu`. CUDA не захардкожена.
+`app/main.py` — только composition root: создаёт модель, адаптер и use cases.
+Ни одна стратегия не импортирует FastAPI, PyTorch или Transformers. Поэтому их
+можно тестировать fake engine без загрузки модели.
 
-При старте сервер печатает:
+Где смотреть каждую реализацию:
 
-```text
-Device: cuda
-GPU: NVIDIA ...
-Model: distilgpt2
-```
+- realtime — `app/application/serving/realtime.py`;
+- offline batching — `app/application/serving/offline_batch.py`;
+- continuous batching — `app/application/serving/continuous_batch.py`;
+- streaming — `app/application/serving/streaming.py` и низкоуровневый streamer
+  в `app/infrastructure/transformers_engine.py`;
+- HTTP-контракты — `app/presentation/api.py`;
+- dashboard — `app/presentation/static/`.
 
-или:
+Подробный разбор для конспекта: [`docs/SERVING_GUIDE.md`](docs/SERVING_GUIDE.md).
 
-```text
-Device: cpu
-Model: distilgpt2
-```
+## Быстрый старт
 
-## 3. Установка
+Требования: Python 3.11+, NVIDIA GPU желательно, но не обязательно.
 
-Не собирайте CUDA вручную. Поставьте готовый wheel PyTorch.
+### CPU
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-```
-
-### Linux + NVIDIA GPU
-
-```bash
-nvidia-smi
-pip install torch --index-url https://download.pytorch.org/whl/cu124
-pip install -r requirements.txt
-```
-
-Если ваш драйвер старше, возьмите другой CUDA index с [pytorch.org](https://pytorch.org/get-started/locally/).
-
-### Windows + WSL2
-
-1. Драйвер NVIDIA ставится в Windows, не внутри WSL.
-2. В WSL2 проверьте:
-
-```bash
-nvidia-smi
-```
-
-3. Дальше как на Linux:
-
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install torch --index-url https://download.pytorch.org/whl/cu124
-pip install -r requirements.txt
-```
-
-Если `nvidia-smi` в WSL не работает, сначала почините GPU passthrough. Без этого сервер всё равно запустится на CPU.
-
-### CPU fallback
-
-Linux:
-
-```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
 pip install -r requirements-cpu.txt
-```
-
-macOS (для локальной проверки без NVIDIA):
-
-```bash
-pip install torch
-pip install -r requirements.txt
-```
-
-На CPU занятие проходится, но разница batch vs single будет слабее: GPU любит широкие тензоры, CPU — нет.
-
-Скопируйте `.env.example` в `.env`, если хотите поменять модель или batcher.
-
-## 4. Запуск
-
-Из корня репозитория:
-
-```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Первый старт скачает модель из Hugging Face.
+### NVIDIA GPU
 
-### Важно: не поднимайте несколько GPU-worker наугад
-
-```bash
-uvicorn app.main:app --workers 4
-```
-
-Каждый worker загрузит **свою копию модели**. На GPU это часто значит OOM или 4× VRAM. Для этого занятия оставляйте 1 process.
-
-`async def` тоже не делает GPU-inference параллельным. Одна GPU в каждый момент выполняет один kernel. Очередь нужна как раз для того, чтобы много HTTP-запросов превращались в один широкий kernel, а не в гонку за одним устройством.
-
-## 5. Проверка
+Проверьте `nvidia-smi`, установите подходящий готовый wheel PyTorch с
+`pytorch.org`, затем:
 
 ```bash
-curl http://localhost:8000/health
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Ожидаемый ответ:
+Не запускайте несколько Uvicorn workers без расчёта VRAM: каждый process
+загрузит собственную копию модели. Для лабораторной используйте один worker.
 
-```json
-{
-  "status": "ok",
-  "device": "cuda",
-  "gpu": "NVIDIA ...",
-  "model": "distilgpt2"
-}
+Настройки из `.env`:
+
+```dotenv
+MODEL_NAME=distilgpt2
+DEVICE=auto
+MAX_BATCH_SIZE=8
+MAX_WAIT_MS=20
+DEFAULT_MAX_NEW_TOKENS=64
+MAX_NEW_TOKENS_CAP=128
 ```
 
-Простой generate:
+## Проверка из терминала
 
 ```bash
-curl -X POST http://localhost:8000/generate \
-  -H 'Content-Type: application/json' \
-  -d '{"prompt":"Explain GPU batching in simple terms","max_new_tokens":64}'
+python client/simple_client.py
+python client/offline_batch_client.py
+python client/concurrent_client.py --requests 32 --concurrency 8 --endpoint /generate/dynamic
+python client/streaming_client.py
+python -m pytest -q
 ```
 
-## 6. Swagger
-
-Откройте [http://localhost:8000/docs](http://localhost:8000/docs).
-
-Там же удобно руками дергать `/generate`, `/generate/batch`, `/generate/dynamic`, `/generate/stream`.
-
-## 7. GPU verification
+Health и GPU telemetry:
 
 ```bash
-nvidia-smi
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/gpu
+curl http://127.0.0.1:8000/batcher/stats
 ```
 
-```bash
-curl http://localhost:8000/gpu
-```
+## Ограничения учебной реализации
 
-`/gpu` возвращает device, имя карты, `memory_allocated`, `memory_reserved`. Utilization показывается только если PyTorch умеет его прочитать — это необязательная метрика.
-
-## Endpoints
-
-| Method | Path | Смысл |
-|---|---|---|
-| GET | `/health` | статус, device, GPU, модель |
-| GET | `/gpu` | VRAM |
-| GET | `/batcher/stats` | последний batch_size / wait_ms |
-| POST | `/generate` | простой single inference |
-| POST | `/generate/batch` | явный batch от клиента |
-| POST | `/generate/dynamic` | single API + dynamic batching |
-
-Одиночный `/generate/dynamic` почти всегда ждёт весь `MAX_WAIT_MS` — больше некого класть в batch. Это не баг, а цена динамической склейки. Разница видна только под concurrent нагрузкой.
-| POST | `/generate/stream` | потоковая генерация |
-
-## Клиенты и benchmark
-
-```bash
-python client/simple_client.py --prompt "Explain FastAPI"
-
-python client/concurrent_client.py --requests 32 --concurrency 8
-python client/concurrent_client.py --requests 32 --concurrency 8 --endpoint /generate
-python client/concurrent_client.py --sweep --endpoint /generate/dynamic
-
-python client/streaming_client.py --prompt "Hello, how are you"
-```
-
-`concurrent_client.py` печатает:
-
-```text
-requests
-successful
-failed
-total time
-average latency
-p50
-p95
-throughput req/s
-```
-
-## Почему batch на GPU выгоднее
-
-GPU хорошо утилизируется широкими тензорами. Двадцать отдельных `generate()` с `batch=1` — это двадцать коротких запусков: много overhead, мало работы на SM.
-
-Один `generate()` с `batch=8` загружает больше данных за раз. Throughput (запросов/сек) обычно растёт.
-
-Но:
-
-```text
-batch ↑          → throughput ↑
-batch ↑          → latency одного запроса часто ↑
-batch ↑          → VRAM ↑
-sequence length ↑ → VRAM ↑
-model size ↑     → VRAM ↑
-```
-
-Padding тоже бьёт по эффективности. Если в одном batch лежат короткий и длинный prompt, короткий дополняется pad-токенами до длины самого длинного. Вы платите compute и памятью за «пустые» позиции.
-
-Именно поэтому между HTTP и GPU нужна очередь: независимые клиенты приходят в разное время, а GPU хочет пачку.
-
-## Docker (optional)
-
-Нужен [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
-
-Проверка:
-
-```bash
-docker run --rm --gpus all nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi
-```
-
-Затем:
-
-```bash
-docker compose up --build
-```
-
-Занятие полностью проходится без Docker.
-
-## Задания
-
-Смотрите `exercises/`.
-
-Файлы, которые студент должен читать и менять:
-
-- `app/main.py` — FastAPI endpoints
-- `app/model/loader.py` — device, `model.eval()`, перенос на GPU
-- `app/model/inference.py` — single и batch generate
-- `app/serving/batcher.py` — dynamic batching
-- `app/serving/streaming.py` — streaming
-- `client/concurrent_client.py` — замеры
-
-## Тесты
-
-```bash
-MODEL_NAME=sshleifer/tiny-gpt2 DEVICE=cpu pytest -q
-```
+- Offline jobs хранятся в памяти и исчезают после рестарта. Для production
+  понадобятся PostgreSQL/Redis и отдельный worker.
+- Один process владеет одной моделью; model lock не даёт разным стратегиям
+  одновременно спорить за ту же GPU.
+- Continuous batcher объединяет только запросы с одинаковым
+  `max_new_tokens`. Production engines обычно bucket’ят больше параметров.
+- SSE chunks — куски декодированного текста, а не гарантированно один tokenizer
+  token на событие. Это особенность `TextIteratorStreamer`.
+- `distilgpt2` выбран для демонстрации механики, а не качества ответов.
