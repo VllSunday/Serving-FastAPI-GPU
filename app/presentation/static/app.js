@@ -62,8 +62,8 @@ function gpuArray() {
   return `<div class="gpu-array" aria-hidden="true">${cells}</div>`;
 }
 
-function moduleMarkup(step, label, badge, content, foot) {
-  return `<button class="compute-module" data-from="${step}" type="button" aria-pressed="false">
+function moduleMarkup(step, label, badge, content, foot, className = "") {
+  return `<button class="compute-module ${className}" data-from="${step}" type="button" aria-pressed="false">
     <span class="module-label">${label}<b>${badge}</b></span>
     ${content}
     <span class="module-foot">${foot}</span>
@@ -72,6 +72,45 @@ function moduleMarkup(step, label, badge, content, foot) {
 
 function linkMarkup(step, label) {
   return `<div class="flow-link" data-from="${step}" aria-hidden="true"><small>${label}</small></div>`;
+}
+
+function kvCacheMap(withNewToken = false) {
+  const tokens = withNewToken ? ["t1", "t2", "t3", "t4", "t5"] : ["t1", "t2", "t3", "t4"];
+  const header = tokens.map((token, index) => `<span class="${withNewToken && index === tokens.length - 1 ? "is-new" : ""}">${token}</span>`).join("");
+  const rows = ["K·L1", "V·L1", "K·L2", "V·L2"].map((label) => {
+    const cells = tokens.map((_, index) => `<i class="${withNewToken && index === tokens.length - 1 ? "is-new" : ""}"></i>`).join("");
+    return `<div class="kv-cache-row"><b>${label}</b>${cells}</div>`;
+  }).join("");
+  return `<div class="kv-cache-map" style="--cache-columns: ${tokens.length}" aria-hidden="true">
+    <div class="kv-cache-head"><b>слой</b>${header}</div>
+    ${rows}
+  </div>`;
+}
+
+function qkvProjection() {
+  return `<div class="qkv-projection" aria-hidden="true">
+    <span><b>Q</b><small>искать</small></span>
+    <span><b>K</b><small>записать</small></span>
+    <span><b>V</b><small>записать</small></span>
+  </div>`;
+}
+
+function attentionPath() {
+  return `<div class="attention-path" aria-hidden="true">
+    <span>Q<sub>new</sub></span><i>×</i><span>K cache</span><i>→</i><span>scores</span><i>×</i><span>V cache</span><i>→</i><span>context</span>
+  </div>`;
+}
+
+function streamDelivery() {
+  return `<div class="stream-delivery" aria-hidden="true">
+    <span><b>2841</b><small>token id</small></span>
+    <i>→</i>
+    <span><b>«кэш»</b><small>decode</small></span>
+    <i>→</i>
+    <span><b>event: token</b><small>SSE chunk</small></span>
+    <i>→</i>
+    <span><b>браузер</b><small>append</small></span>
+  </div>`;
 }
 
 const mechanics = {
@@ -142,25 +181,27 @@ const mechanics = {
     </div>`,
   },
   stream: {
-    note: "prefill → decode step → SSE chunk → растущий ответ",
-    kicker: "token streaming · вычислительная схема",
-    title: "Decode отдаёт текст по мере появления",
-    summary: "Модель всё ещё генерирует autoregressive, но клиент получает decoded chunks до завершения всей последовательности.",
-    aria: "Streaming: prompt кодируется, модель выполняет prefill, затем повторяет decode шаги по одному новому токену и отправляет накопленные части текста как SSE события.",
+    note: "prefill → KV cache → attention read → append → SSE",
+    kicker: "token streaming · KV-cache explorer",
+    title: "Один decode-шаг без повторного расчёта прошлого",
+    summary: "Выберите этап или запустите replay: схема показывает, что хранится в KV-cache, как новый Query читает прошлый контекст и где начинается SSE.",
+    aria: "Streaming и KV cache: prompt токенизируется, prefill записывает Keys и Values для всех слоёв, новый Query читает сохранённый контекст, новые Key и Value дописываются в cache, а готовый токен отправляется клиенту как SSE событие.",
     steps: [
-      ["Prompt входит один раз", "Tokenizer превращает исходный текст в input_ids формы [1 × T]."],
-      ["Prefill строит контекст", "GPU параллельно обрабатывает prompt-токены и создаёт KV cache для последующих шагов."],
-      ["Autoregressive decode", "На каждом шаге модель выбирает следующий token. Следующий шаг зависит от уже выбранного, поэтому эта ось остаётся последовательной."],
-      ["Chunks приходят до done", "TextIteratorStreamer декодирует готовые части, а SSE отправляет token events. Это уменьшает TTFT, но не стоимость inference."],
+      ["Tokenizer строит input_ids", "Prompt входит один раз и превращается в T токенов. Это исходная последовательность, которую модель должна прочитать перед генерацией."],
+      ["Prefill заполняет KV-cache", "Все prompt-токены обрабатываются параллельно. На каждом attention-слое модель сохраняет их Key и Value. Query прошлого хранить не нужно: он уже выполнил свою работу."],
+      ["Для нового токена считаются Q, K и V", "На decode-шаге модель обрабатывает только последний токен. Q нужен для чтения контекста, а новые K и V понадобятся текущему и следующим шагам."],
+      ["Query читает сохранённый контекст", "Q нового токена сравнивается со всеми Keys в cache. Полученные attention-веса смешивают соответствующие Values в один context vector — прошлые K и V заново не вычисляются."],
+      ["Новые K и V дописываются", "После шага cache растёт с T до T+1 для каждого слоя. Затем цикл повторяется для следующего токена. Экономия вычислений оплачивается памятью, которая растёт с длиной контекста, числом слоёв и batch size."],
+      ["Готовый токен уходит через SSE", "Token id декодируется в текст, TextIteratorStreamer отдаёт chunk, а endpoint отправляет event: token. SSE сокращает время до видимого ответа, но не ускоряет вычисления модели — это делает KV-cache."],
     ],
-    board: () => `<div class="compute-flow">
-      ${moduleMarkup(0, "Prompt", "[1×T]", `<div class="token-row"><span class="token">Как</span><span class="token">работает</span><span class="token">stream</span><span class="token">?</span></div>`, "tokenize один раз")}
-      ${linkMarkup(1, "prefill")}
-      ${moduleMarkup(1, "KV cache", "context", tensor(2, 8), "параллельно по prompt")}
-      ${linkMarkup(2, "decode loop")}
-      ${moduleMarkup(2, "Next token", "1 / step", gpuArray(), "token → cache → token")}
-      ${linkMarkup(3, "SSE")}
-      ${moduleMarkup(3, "Client stream", "chunks", `<div class="token-stream"><span class="stream-token">Ответ</span><span class="stream-token"> растёт</span><span class="stream-token"> по</span><span class="stream-token"> частям</span></div>`, "event: token … done")}
+    routeSteps: { client: 0, model: 1, response: 5 },
+    board: () => `<div class="kv-flow">
+      ${moduleMarkup(0, "01 · Prompt", "[1×T]", `<div class="token-row"><span class="token">Как</span><span class="token">работает</span><span class="token">KV</span><span class="token">cache</span><span class="token">?</span></div><div class="shape-note">input_ids · T=5</div>`, "tokenize один раз", "kv-module")}
+      ${moduleMarkup(1, "02 · Prefill", "write K/V", kvCacheMap(), "K/V для каждого слоя и token", "kv-module")}
+      ${moduleMarkup(2, "03 · Decode", "1 token", qkvProjection(), "Q читаем · K/V сохраняем", "kv-module")}
+      ${moduleMarkup(3, "04 · Attention", "read cache", attentionPath(), "прошлое не считаем повторно", "kv-module")}
+      ${moduleMarkup(4, "05 · Append", "T → T+1", `${kvCacheMap(true)}<div class="decode-loop-note">↻ следующий decode-шаг</div>`, "cache растёт на одну позицию", "kv-module")}
+      ${moduleMarkup(5, "06 · Delivery", "SSE", `${streamDelivery()}<div class="token-stream"><span class="stream-token">Ответ</span><span class="stream-token"> растёт</span><span class="stream-token"> сразу</span></div>`, "event: token … event: done", "kv-module")}
     </div>`,
   },
 };
@@ -284,7 +325,7 @@ function toggleMechanics() {
 
 function syncMechanicsWithStage(stageName) {
   if ($("#mechanics-lab").hidden) return;
-  const stageSteps = { client: 0, queue: 1, model: 2, response: 3 };
+  const stageSteps = mechanics[currentMode].routeSteps || { client: 0, queue: 1, model: 2, response: 3 };
   if (stageName in stageSteps) setMechanicsStep(stageSteps[stageName]);
 }
 

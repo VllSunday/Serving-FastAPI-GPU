@@ -153,7 +153,7 @@ components:
 
 LLM Serving Lab treats inference as a visible transit network rather than a generic chat dashboard. Near-black control surfaces, fine route lines, compact status labels, and instrument-like readouts create a calm operations room where the serving mechanism remains more important than decoration.
 
-The system is dense but ordered. A strategy selects one colored route through Client, Queue, Model, and Response; the rest of the interface stays neutral so route differences, generated output, and measured runtime remain legible. A progressively disclosed Mechanics Explorer extends that route into a four-step educational model of tokens, tensors, queues, GPU work, KV cache, and SSE without competing with the primary experiment when collapsed.
+The system is dense but ordered. A strategy selects one colored route through Client, Queue, Model, and Response; the rest of the interface stays neutral so route differences, generated output, and measured runtime remain legible. A progressively disclosed Mechanics Explorer extends that route into a finite educational model of tokens, tensors, queues, GPU work, KV cache, and SSE without competing with the primary experiment when collapsed.
 
 **Key Characteristics:**
 
@@ -161,7 +161,7 @@ The system is dense but ordered. A strategy selects one colored route through Cl
 - A single mode-specific route color carries state through navigation, controls, traces, and mechanics.
 - Sans-serif explanation paired with monospaced endpoints, telemetry, tensor labels, and event time.
 - Compact control-desk density with a dominant observable request route.
-- Progressive disclosure separates the essential experiment from the deeper four-step explanation.
+- Progressive disclosure separates the essential experiment from the deeper finite-step explanation.
 - Responsive transformation from horizontal control room to vertical mobile flows.
 - Simulated educational time is explicitly separated from real telemetry and detected runtime.
 
@@ -220,7 +220,7 @@ The palette is a restrained dark instrument panel whose saturated signals identi
 
 ## Layout
 
-The desktop shell is a 244px sticky strategy rail beside a fluid work area capped at 1540px. The live route occupies the full width above a three-column control desk. Its Mechanics Explorer opens in place beneath the route, preserving the single trace panel rather than adding another dashboard card. Inside it, four equal interactive modules and three 40px links form a left-to-right computational sequence.
+The desktop shell is a 244px sticky strategy rail beside a fluid work area capped at 1540px. The live route occupies the full width above a three-column control desk. Its Mechanics Explorer opens in place beneath the route, preserving the single trace panel rather than adding another dashboard card. Realtime and batching modes use four linked modules; streaming uses a six-module, two-row KV-cache explorer.
 
 At 1180px the desk becomes two columns. At 840px the rail becomes a horizontally scrollable top strip and the desk collapses to one column. At 620px both request route and Mechanics Explorer turn vertical: modules become a single column, links become 18px vertical connectors, non-participating route stages disappear, and metrics become a two-by-two grid. The expanded mobile page intentionally grows with the explanation rather than clipping it.
 
@@ -273,9 +273,9 @@ The signature route is a four-station Client → Queue → Model → Response tr
 
 ### Mechanics Explorer
 
-The explorer is progressive disclosure inside the route panel. Its summary line previews the mode-specific computation; expansion reveals four real button modules so a learner can stop on any step. Replay advances after 850ms for the first state and 1100ms for later states, while collapsing, selecting a step, changing mode, starting an actual run, or hiding the document cancels stale playback.
+The explorer is progressive disclosure inside the route panel. Its summary line previews the mode-specific computation; expansion reveals real button modules so a learner can stop on any step. Replay advances after 850ms for the first state and 1100ms for later states, while collapsing, selecting a step, changing mode, starting an actual run, or hiding the document cancels stale playback.
 
-Each strategy uses a different finite representation: realtime shows separate tokenization and serial model lanes; offline batch shows one wide tensor and shared GPU work; continuous batching shows arrivals, a bounded queue window, an `[N×T]` batch, and Future mapping; streaming shows prompt tokens, KV cache, autoregressive decode, and SSE chunks. Reached modules remain visible, the current module receives the route-soft fill, and the readout explains exactly one of four steps.
+Each strategy uses a different finite representation: realtime shows separate tokenization and serial model lanes; offline batch shows one wide tensor and shared GPU work; continuous batching shows arrivals, a bounded queue window, an `[N×T]` batch, and Future mapping. Streaming expands to six steps: tokenization, prefill writes, Q/K/V projection, attention reads, cache append, and SSE delivery. Reached modules remain visible, the current module receives the route-soft fill, and the readout explains exactly one active step.
 
 The explorer is an educational model, not telemetry. Its simplified tensor shapes and stretched animation time are labeled as such; actual latency, queue time, inference time, batch size, and CPU/CUDA runtime remain in the telemetry and runtime note. During a real request, stage events drive the explorer instead of its demonstration clock.
 
@@ -291,7 +291,7 @@ Metrics form a border-separated instrument row with monospaced values and quiet 
 
 - **Do** keep the current mode's route color consistent across navigation, dispatch, focus, trace, and mechanics.
 - **Do** synchronize expanded mechanics to actual request stages while preserving telemetry as the measured source of truth.
-- **Do** make all four mechanics modules keyboard-operable buttons with a visible selected state.
+- **Do** make every mechanics module a keyboard-operable button with a visible selected state.
 - **Do** preserve visible focus, readable contrast, cancellable replay, reduced-motion final state, and vertical mobile flow.
 - **Do** explain token, tensor, queue, GPU, cache, Future, and SSE representations with concise labels and step copy.
 
@@ -301,4 +301,4 @@ Metrics form a border-separated instrument row with monospaced values and quiet 
 - **Don't** turn the application into a generic message-bubble chat or interchangeable analytics cards.
 - **Don't** add decorative charts, gradients, broad glows, or invented performance claims.
 - **Don't** autoplay hidden mechanics, leave obsolete timers running, or make motion the only way to understand state.
-- **Don't** clip or horizontally compress the four-step explanation on mobile; stack the flow vertically.
+- **Don't** clip or horizontally compress the explanation on mobile; stack the flow vertically.

@@ -75,8 +75,8 @@ meaning; it is never ambient decoration.
 
 “Как это работает” is a 52px progressive-disclosure row inside the request
 route panel. Collapsed state retains a concise mode-specific formula. Expanded
-state adds four interactive button modules, three directional links, one step
-readout, a replay action, and explicit educational/runtime notes.
+state adds interactive button modules, one step readout, a replay action, and
+explicit educational/runtime notes.
 
 The four strategies use finite, inspectable representations:
 
@@ -86,8 +86,9 @@ The four strategies use finite, inspectable representations:
    completed job collected by polling.
 3. **Continuous batch:** HTTP arrivals, bounded async queue/wait window,
    activations `[N×T×H]` / GPU batch `[N×T]`, and output-to-Future mapping.
-4. **Streaming:** prompt tokens, prefill and KV cache, sequential decode, and SSE
-   chunks arriving before `done`.
+4. **Streaming:** six stages expose prompt tokens, prefill K/V writes, the new
+   Q/K/V projection, attention reads, cache append, and SSE delivery before
+   `done`.
 
 Each module is a real keyboard-operable button with `aria-pressed`; selecting a
 module cancels replay and holds that finite state. Replay starts at step one,
@@ -119,7 +120,7 @@ batch size, and CPU/CUDA identity live only in telemetry and the runtime note.
 
 - Keep the request path above controls and telemetry at every viewport.
 - Keep deep mechanics collapsed until explicitly requested.
-- On mobile, stack four modules and links vertically; never clip or squeeze them.
+- On mobile, stack modules and links vertically; never clip or squeeze them.
 - Never present visual timing, simplified geometry, or capped payload markers as
   measured data.
 - Do not use light dashboard surfaces, purple AI gradients, glassmorphism,
