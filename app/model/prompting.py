@@ -9,10 +9,10 @@ def format_prompts(
     tokenizer: PreTrainedTokenizerBase,
     prompts: list[str],
 ) -> tuple[list[str], bool]:
-    """Render user prompts with the model's native chat template when present.
+    """Применяет родной chat template модели, если он есть.
 
-    Base models such as GPT-2 do not define a chat template, so tests and custom
-    base-model configurations keep the original plain-text behavior.
+    У базовых моделей вроде GPT-2 шаблона нет. Для них и для тестовых tokenizer
+    сохраняем обычный plain text.
     """
     if not getattr(tokenizer, "chat_template", None):
         return prompts, False

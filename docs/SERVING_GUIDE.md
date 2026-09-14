@@ -25,6 +25,60 @@ dashboard с конкретными участками кода.
 Строка под схемой сообщает реальный runtime. Если проект запущен на CPU,
 GPU-блоки объясняют CUDA-механику, но миллисекунды telemetry измерены на CPU.
 
+## Почему `inference_ms` может быть почти одинаковым
+
+В `app/model/inference.py` таймер охватывает ровно один вызов
+`model.generate()`. Поэтому смысл числа зависит от режима:
+
+- realtime: время генерации одного prompt с `batch_size=1`;
+- offline/dynamic: время генерации всей матрицы `[B × T]` одним вызовом;
+- streaming: в UI показываются TTFT и полная latency потока, а не отдельный
+  `inference_ms`.
+
+Если одиночный inference и batch inference оба занимают около 13 секунд, это
+само по себе нормально. Batch за те же 13 секунд мог обработать четыре prompt,
+тогда throughput вырос примерно в четыре раза. Сравнивать нужно одинаковую
+работу:
+
+```text
+realtime wall time = время четырёх отдельных запросов
+batch wall time    = время одного вызова с batch_size=4
+throughput         = число готовых prompts / wall time
+```
+
+На CPU batch может дать небольшой выигрыш, не дать его совсем или даже стать
+медленнее. Основной эффект ожидается на GPU, где широкие матричные операции лучше
+загружают вычислительные блоки. На результат также влияют padding, длина output,
+размер batch, память и прогрев модели.
+
+Для честного сравнения используйте один prompt, одинаковый лимит токенов и одну
+конкурентность:
+
+```bash
+python client/concurrent_client.py --requests 4 --concurrency 4 --endpoint /generate --max-new-tokens 16
+python client/concurrent_client.py --requests 4 --concurrency 4 --endpoint /generate/dynamic --max-new-tokens 16
+```
+
+Контрольный CPU-прогон `Qwen2.5-1.5B-Instruct` на текущей машине дал:
+
+| Режим | Работа | Wall time | Throughput |
+|---|---:|---:|---:|
+| realtime | 4 отдельных вызова | 15.01 s | 0.27 req/s |
+| dynamic | 1 batch из 4 запросов | 5.61 s | 0.71 req/s |
+
+Цифры будут меняться от запуска к запуску, но сравнивать нужно именно весь объём
+работы. В этом прогоне dynamic throughput оказался примерно в 2.6 раза выше.
+
+## В каком порядке читать код
+
+1. `app/presentation/api.py` — HTTP-контракты и границы каждого режима.
+2. `app/application/serving/realtime.py` — один request/response.
+3. `app/application/serving/offline_batch.py` — жизненный цикл offline job.
+4. `app/application/serving/continuous_batch.py` — окно, очередь и Future mapping.
+5. `app/application/serving/streaming.py` — формирование SSE events.
+6. `app/infrastructure/transformers_engine.py` — model lock и Hugging Face adapter.
+7. `app/model/inference.py` — tokenization, tensor batch и границы замера.
+
 ## 1. Online realtime — `/generate`
 
 ```text

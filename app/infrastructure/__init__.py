@@ -1,1 +1,1 @@
-"""Concrete adapters for model runtimes."""
+"""Адаптеры для конкретного model runtime."""

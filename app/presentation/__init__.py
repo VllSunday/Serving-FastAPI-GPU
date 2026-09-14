@@ -1,1 +1,1 @@
-"""HTTP and browser adapters."""
+"""HTTP-слой и браузерный интерфейс."""

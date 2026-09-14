@@ -1,1 +1,1 @@
-"""Framework-independent serving use cases."""
+"""Use cases сервинга, не зависящие от веб-фреймворка."""

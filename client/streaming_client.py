@@ -8,9 +8,9 @@ import httpx
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Streaming client for /generate/stream")
+    parser = argparse.ArgumentParser(description="Streaming-клиент для /generate/stream")
     parser.add_argument("--url", default="http://127.0.0.1:8000")
-    parser.add_argument("--prompt", default="Hello, how are you")
+    parser.add_argument("--prompt", default="Коротко объясни потоковую генерацию")
     parser.add_argument("--max-new-tokens", type=int, default=32)
     args = parser.parse_args()
 
@@ -21,7 +21,7 @@ def main() -> None:
         timeout=180.0,
     ) as response:
         response.raise_for_status()
-        print("--- stream ---")
+        print("--- поток ---")
         event = "message"
         for line in response.iter_lines():
             if line.startswith("event:"):
@@ -32,7 +32,7 @@ def main() -> None:
                     print(data["delta"], end="", flush=True)
                 elif event == "done":
                     print(
-                        f"\n--- done: chunks={data['chunks']} "
+                        f"\n--- готово: chunks={data['chunks']} "
                         f"latency_ms={data['latency_ms']} ---"
                     )
 

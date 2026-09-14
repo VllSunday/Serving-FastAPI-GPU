@@ -9,10 +9,10 @@ import httpx
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Single-request client for /generate")
+    parser = argparse.ArgumentParser(description="Клиент одного запроса к /generate")
     parser.add_argument("--url", default="http://127.0.0.1:8000")
     parser.add_argument("--endpoint", default="/generate")
-    parser.add_argument("--prompt", default="Explain GPU batching in simple terms")
+    parser.add_argument("--prompt", default="Объясни batching на GPU простыми словами")
     parser.add_argument("--max-new-tokens", type=int, default=64)
     args = parser.parse_args()
 

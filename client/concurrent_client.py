@@ -53,8 +53,8 @@ async def run_benchmark(
 
     async with httpx.AsyncClient(timeout=timeout) as client:
         tasks = [
-            one_request(client, url, f"{prompt} #{index}", max_new_tokens, semaphore)
-            for index in range(requests)
+            one_request(client, url, prompt, max_new_tokens, semaphore)
+            for _ in range(requests)
         ]
         results = await asyncio.gather(*tasks)
 
@@ -64,34 +64,34 @@ async def run_benchmark(
     avg = statistics.mean(successes) if successes else 0.0
     throughput = len(successes) / total_s if total_s > 0 else 0.0
 
-    print(f"requests           {requests}")
-    print(f"concurrency        {concurrency}")
+    print(f"запросов           {requests}")
+    print(f"параллельность     {concurrency}")
     print(f"endpoint           {endpoint}")
-    print(f"successful         {len(successes)}")
-    print(f"failed             {failures}")
-    print(f"total time         {total_s:.3f}s")
-    print(f"average latency    {avg:.1f}ms")
+    print(f"успешно            {len(successes)}")
+    print(f"ошибок              {failures}")
+    print(f"общее время        {total_s:.3f}s")
+    print(f"средняя latency    {avg:.1f}ms")
     print(f"p50                {percentile(successes, 50):.1f}ms")
     print(f"p95                {percentile(successes, 95):.1f}ms")
     print(f"throughput         {throughput:.2f} req/s")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Concurrent benchmark client")
+    parser = argparse.ArgumentParser(description="Клиент для конкурентной нагрузки")
     parser.add_argument("--url", default="http://127.0.0.1:8000")
     parser.add_argument(
         "--endpoint",
         default="/generate/dynamic",
-        help="Use /generate to compare against dynamic batching",
+        help="Для сравнения с dynamic batching укажите /generate",
     )
     parser.add_argument("--requests", type=int, default=32)
     parser.add_argument("--concurrency", type=int, default=8)
-    parser.add_argument("--prompt", default="Explain GPU serving")
+    parser.add_argument("--prompt", default="Коротко объясни batching на GPU")
     parser.add_argument("--max-new-tokens", type=int, default=32)
     parser.add_argument(
         "--sweep",
         action="store_true",
-        help="Run 1,2,4,8,16,32 concurrent requests",
+        help="Прогнать серии из 1, 2, 4, 8, 16 и 32 запросов",
     )
     args = parser.parse_args()
 

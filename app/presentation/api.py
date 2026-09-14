@@ -86,12 +86,14 @@ def batcher_stats(request: Request) -> dict:
     return services(request).continuous_batch.stats()
 
 
+# Realtime: один открытый HTTP-запрос и один полный JSON в конце.
 @router.post("/generate", response_model=GenerateResponse, tags=["1 · realtime"])
 async def generate(payload: GenerateRequest, request: Request) -> GenerateResponse:
     result = await services(request).realtime.generate(command(payload))
     return generation_response(result)
 
 
+# Offline batch: POST только создаёт job, результат забирается через GET.
 @router.post(
     "/batch",
     response_model=BatchAcceptedResponse,
@@ -130,7 +132,7 @@ async def legacy_generate_batch(
     payload: BatchGenerateRequest,
     request: Request,
 ) -> BatchGenerateResponse:
-    """Compatibility route from the teacher's starter repository."""
+    """Старый маршрут из исходного репозитория преподавателя."""
     token_limit = clamp_tokens(payload.max_new_tokens)
     commands = [GenerationCommand(prompt, token_limit) for prompt in payload.prompts]
     submitted = await services(request).offline_batch.submit(commands)
@@ -149,6 +151,7 @@ async def dynamic_response(payload: GenerateRequest, request: Request) -> Genera
     return generation_response(result)
 
 
+# Dynamic: HTTP-запрос одиночный, batch формируется внутри worker.
 @router.post(
     "/generate/dynamic",
     response_model=GenerateResponse,
@@ -167,10 +170,11 @@ async def generate_dinamic_alias(
     payload: GenerateRequest,
     request: Request,
 ) -> GenerateResponse:
-    """Alias for the spelling used in the assignment text."""
+    """Alias для написания, которое используется в тексте задания."""
     return await dynamic_response(payload, request)
 
 
+# Streaming: соединение остаётся открытым и получает SSE-события.
 @router.post("/generate/stream", tags=["4 · streaming"])
 async def generate_stream(payload: GenerateRequest, request: Request) -> StreamingResponse:
     return StreamingResponse(

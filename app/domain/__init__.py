@@ -1,1 +1,1 @@
-"""Domain objects shared by serving strategies and adapters."""
+"""Общие доменные объекты для стратегий сервинга и адаптеров."""

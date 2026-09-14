@@ -13,10 +13,10 @@ from app.model.prompting import format_prompts
 
 
 class TransformersEngine:
-    """Hugging Face implementation of the application engine port.
+    """Адаптер между use cases и Hugging Face.
 
-    One process owns one model. The lock prevents unrelated endpoint strategies
-    from launching competing generate calls on the same GPU at the same time.
+    Один процесс владеет одной моделью. Lock не даёт разным endpoint одновременно
+    запускать несовместимые generate-вызовы на одном устройстве.
     """
 
     def __init__(self, bundle: ModelBundle) -> None:
@@ -52,6 +52,7 @@ class TransformersEngine:
         errors: list[Exception] = []
 
         def run_generation() -> None:
+            # generate() блокирующий, поэтому streaming запускает его в своём потоке.
             try:
                 with self._model_lock, torch.inference_mode():
                     self.bundle.model.generate(
@@ -61,7 +62,7 @@ class TransformersEngine:
                         pad_token_id=self.bundle.tokenizer.pad_token_id,
                         streamer=streamer,
                     )
-            except Exception as exc:  # noqa: BLE001 - relay thread errors to iterator
+            except Exception as exc:  # noqa: BLE001 - передаём ошибку из потока наружу
                 errors.append(exc)
                 streamer.end()
 

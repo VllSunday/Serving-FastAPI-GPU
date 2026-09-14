@@ -7,7 +7,7 @@ from app.domain.generation import EngineOutput
 
 
 class GenerationEngine(Protocol):
-    """Boundary implemented by the Hugging Face infrastructure adapter."""
+    """Контракт, который инфраструктурный адаптер реализует для use cases."""
 
     def generate(self, prompt: str, max_new_tokens: int) -> EngineOutput: ...
 

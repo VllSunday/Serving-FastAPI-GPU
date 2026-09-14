@@ -9,12 +9,20 @@ from app.domain.generation import GenerationCommand, GenerationResult
 
 
 class RealtimeServing:
-    """One request maps directly to one model invocation."""
+    """Обычный request/response без прикладной очереди.
+
+    Этапы:
+    1. Получить команду от HTTP-слоя.
+    2. Передать синхронный inference в отдельный поток.
+    3. Дождаться одного вызова модели.
+    4. Вернуть готовый текст и замеры клиенту одним ответом.
+    """
 
     def __init__(self, engine: GenerationEngine) -> None:
         self._engine = engine
 
     async def generate(self, command: GenerationCommand) -> GenerationResult:
+        # Полная latency начинается до передачи работы модели.
         started = time.perf_counter()
         output = await asyncio.to_thread(
             self._engine.generate,
@@ -28,5 +36,6 @@ class RealtimeServing:
             text=output.text,
             latency_ms=latency_ms,
             inference_ms=output.inference_ms,
+            # Явной очереди здесь нет. Ожидание model lock входит в latency_ms.
             queue_ms=0.0,
         )

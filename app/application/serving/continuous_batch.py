@@ -19,11 +19,13 @@ class DynamicJob:
 
 
 class ContinuousBatchServing:
-    """Merge independent requests that share generation parameters.
+    """Собирает независимые realtime-запросы в общий batch.
 
-    HTTP requests wait on their own Future. The worker collects compatible jobs
-    for a short time window, invokes the model once, then routes each result back
-    to the matching Future.
+    Этапы:
+    1. Каждый HTTP-запрос создаёт свой Future и попадает в общую очередь.
+    2. Первый запрос открывает короткое окно ожидания.
+    3. Worker собирает совместимые задачи и один раз вызывает generate_batch().
+    4. Результат с позиции i завершает Future исходной задачи i.
     """
 
     def __init__(
@@ -64,6 +66,7 @@ class ContinuousBatchServing:
         }
 
     async def submit(self, command: GenerationCommand) -> GenerationResult:
+        # HTTP-запрос ждёт только свой Future, хотя вычисление будет общим.
         future = asyncio.get_running_loop().create_future()
         job = DynamicJob(command=command, future=future)
         await self._queue.put(job)
@@ -86,6 +89,7 @@ class ContinuousBatchServing:
 
     async def _collect_compatible(self, first: DynamicJob) -> list[DynamicJob]:
         batch = [first]
+        # Дедлайн считается от первого запроса, иначе очередь могла бы ждать вечно.
         deadline = first.enqueued_at + self.max_wait_ms / 1000
 
         while len(batch) < self.max_batch_size:
@@ -102,6 +106,7 @@ class ContinuousBatchServing:
             if job.future.cancelled():
                 continue
             if job.command.max_new_tokens != first.command.max_new_tokens:
+                # Другой лимит токенов требует отдельного model call.
                 self._deferred.append(job)
                 break
             batch.append(job)
@@ -121,7 +126,8 @@ class ContinuousBatchServing:
                 token_limit,
             )
             if len(texts) != len(batch):
-                raise RuntimeError("batch result count does not match request count")
+                raise RuntimeError("число результатов не совпало с размером batch")
+            # Порядок здесь важен: output[i] относится к job[i].
             for job, text in zip(batch, texts, strict=True):
                 if job.future.done():
                     continue
@@ -142,7 +148,7 @@ class ContinuousBatchServing:
                     )
                 )
             self.last_inference_ms = round(inference_ms, 2)
-        except Exception as exc:  # noqa: BLE001 - every job must receive worker errors
+        except Exception as exc:  # noqa: BLE001 - ошибку должны получить все Future
             for job in batch:
                 if not job.future.done():
                     job.future.set_exception(exc)

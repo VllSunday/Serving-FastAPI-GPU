@@ -42,7 +42,7 @@ def load_model() -> ModelBundle:
     print(f"Model: {model_name}")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # GPT-2 family has no pad token. Left padding matters for decoder-only batching.
+    # У GPT-2 нет pad token; для decoder-only batch нужен padding слева.
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"

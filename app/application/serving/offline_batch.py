@@ -14,10 +14,13 @@ from app.domain.generation import (
 
 
 class OfflineBatchServing:
-    """Durable-looking job API backed by an in-memory queue for this lesson.
+    """Offline job с очередью в памяти.
 
-    The client submits all prompts together and does not hold the POST request open.
-    A single worker later executes one wide model call for the complete job.
+    Этапы:
+    1. Принять сразу все prompts и создать job.
+    2. Вернуть клиенту job_id, не удерживая исходный POST.
+    3. Worker достаёт job из очереди и запускает один batch inference.
+    4. Сохранить результаты; клиент забирает их отдельным GET-запросом.
     """
 
     def __init__(self, engine: GenerationEngine) -> None:
@@ -33,6 +36,7 @@ class OfflineBatchServing:
         await self._queue.put(None)
 
     async def submit(self, commands: list[GenerationCommand]) -> OfflineBatchJob:
+        # POST заканчивается после постановки job в очередь.
         job = OfflineBatchJob(job_id=str(uuid4()), commands=commands)
         self._jobs[job.job_id] = job
         self._done[job.job_id] = asyncio.Event()
@@ -58,6 +62,7 @@ class OfflineBatchServing:
 
     async def run(self) -> None:
         while True:
+            # Единственный worker последовательно разбирает очередь offline jobs.
             job_id = await self._queue.get()
             if job_id is None:
                 return
@@ -65,6 +70,7 @@ class OfflineBatchServing:
             job.state = BatchState.RUNNING
             job.started_at = utc_now()
             try:
+                # Весь job становится одним широким вызовом generate_batch().
                 token_limit = max(command.max_new_tokens for command in job.commands)
                 prompts = [command.prompt for command in job.commands]
                 results, inference_ms = await asyncio.to_thread(
@@ -75,7 +81,7 @@ class OfflineBatchServing:
                 job.results = results
                 job.inference_ms = inference_ms
                 job.state = BatchState.COMPLETED
-            except Exception as exc:  # noqa: BLE001 - persist failure in job state
+            except Exception as exc:  # noqa: BLE001 - ошибку нужно сохранить в job
                 job.error = str(exc)
                 job.state = BatchState.FAILED
             finally:

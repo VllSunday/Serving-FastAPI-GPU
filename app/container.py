@@ -11,7 +11,7 @@ from app.infrastructure.transformers_engine import TransformersEngine
 
 @dataclass(frozen=True)
 class ServiceContainer:
-    """Objects wired by the composition root in app.main."""
+    """Объекты, которые composition root собирает в app.main."""
 
     engine: TransformersEngine
     realtime: RealtimeServing

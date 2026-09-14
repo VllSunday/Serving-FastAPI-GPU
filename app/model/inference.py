@@ -17,6 +17,8 @@ def generate_one(
     prompt: str,
     max_new_tokens: int,
 ) -> tuple[str, float]:
+    """Форматирует один prompt, запускает модель и декодирует completion."""
+    # Подготовка input не входит в inference_ms: здесь только tokenizer и device copy.
     formatted, uses_chat_template = format_prompts(bundle.tokenizer, [prompt])
     encoded = bundle.tokenizer(
         formatted[0],
@@ -25,6 +27,7 @@ def generate_one(
     )
     encoded = _move_to_device(encoded, bundle.device)
 
+    # Таймер охватывает ровно model.generate().
     started = time.perf_counter()
     with torch.inference_mode():
         output_ids = bundle.model.generate(
@@ -47,6 +50,8 @@ def generate_batch(
     prompts: list[str],
     max_new_tokens: int,
 ) -> tuple[list[str], float]:
+    """Собирает prompts в один tensor batch и возвращает тексты в том же порядке."""
+    # padding делает прямоугольный tensor [batch_size, max_prompt_length].
     formatted, uses_chat_template = format_prompts(bundle.tokenizer, prompts)
     encoded = bundle.tokenizer(
         formatted,
@@ -57,6 +62,7 @@ def generate_batch(
     )
     encoded = _move_to_device(encoded, bundle.device)
 
+    # Это время всего batch-вызова, а не сумма и не среднее по prompt.
     started = time.perf_counter()
     with torch.inference_mode():
         output_ids = bundle.model.generate(

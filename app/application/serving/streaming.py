@@ -22,7 +22,14 @@ def _next_chunk(iterator: Iterator[str]) -> str | None:
 
 
 class StreamingServing:
-    """Expose partial decoded text while synchronous generation is still running."""
+    """Отдаёт декодированный текст частями во время генерации.
+
+    Этапы:
+    1. Принять prompt и сразу открыть SSE-соединение.
+    2. Запустить синхронную генерацию через engine.stream().
+    3. Передавать каждый готовый chunk событием token.
+    4. Завершить поток событием done с полным текстом и latency.
+    """
 
     def __init__(self, engine: GenerationEngine) -> None:
         self._engine = engine
@@ -30,6 +37,7 @@ class StreamingServing:
     async def events(self, command: GenerationCommand) -> AsyncIterator[str]:
         request_id = str(uuid4())
         started = time.perf_counter()
+        # start подтверждает соединение ещё до первого фрагмента текста.
         yield _sse("start", {"request_id": request_id, "mode": "stream"})
 
         iterator = self._engine.stream(command.prompt, command.max_new_tokens)
@@ -43,6 +51,7 @@ class StreamingServing:
                 continue
             text += piece
             chunk_index += 1
+            # Один chunk не обязан совпадать с одним tokenizer token.
             yield _sse(
                 "token",
                 {

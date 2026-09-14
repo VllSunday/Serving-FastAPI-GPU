@@ -4,7 +4,7 @@ import torch
 
 
 def gpu_snapshot(device: str) -> dict:
-    """VRAM through PyTorch. Utilization is optional and may be missing."""
+    """Снимок VRAM через PyTorch; utilization доступен не на всех сборках."""
     if device != "cuda" or not torch.cuda.is_available():
         return {
             "device": device,

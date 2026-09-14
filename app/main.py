@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="LLM Serving Lab",
-    description="Four inspectable model-serving strategies behind one model runtime.",
+    description="Четыре наглядные стратегии сервинга с общей моделью.",
     lifespan=lifespan,
 )
 app.include_router(router)
