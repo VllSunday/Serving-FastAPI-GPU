@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-14T18:09:42.0418116+05:00",
+  "generatedAt": "2026-09-14T18:44:30.2817669+05:00",
   "title": "Design System: LLM Serving Lab",
   "extensions": {
     "colorMeta": {
@@ -52,6 +52,12 @@
         "canonical": "#141c25",
         "tonalRamp": ["oklch(15% 0.021 245)", "oklch(26% 0.021 245)", "oklch(38% 0.019 245)", "oklch(50% 0.017 245)", "oklch(62% 0.014 245)", "oklch(74% 0.01 245)", "oklch(86% 0.006 245)", "oklch(95% 0.003 245)"]
       },
+      "field-hover": {
+        "role": "neutral",
+        "displayName": "Field Hover",
+        "canonical": "#485769",
+        "tonalRamp": ["oklch(15% 0.032 245)", "oklch(26% 0.032 245)", "oklch(38% 0.03 245)", "oklch(50% 0.026 245)", "oklch(62% 0.02 245)", "oklch(74% 0.014 245)", "oklch(86% 0.008 245)", "oklch(95% 0.003 245)"]
+      },
       "network-line": {
         "role": "neutral",
         "displayName": "Network Line",
@@ -85,9 +91,13 @@
     },
     "typographyMeta": {
       "display": { "displayName": "Operating Mode Display", "purpose": "Names the selected serving strategy at the top of the work area." },
-      "headline": { "displayName": "Instrument Headline", "purpose": "Names compact trace and control-desk panels." },
+      "title": { "displayName": "Mechanics Title", "purpose": "Names the expanded computational explanation." },
+      "headline": { "displayName": "Instrument Headline", "purpose": "Names trace and control-desk panels." },
       "body": { "displayName": "Explanatory Body", "purpose": "Explains tradeoffs and carries generated model content." },
-      "label": { "displayName": "Machine Label", "purpose": "Marks endpoints, telemetry, statuses, timestamps, and key commands." }
+      "supporting": { "displayName": "Supporting Explanation", "purpose": "Carries mechanics summaries, step titles, and route-stage text." },
+      "machine-label": { "displayName": "Mechanics Machine Label", "purpose": "Marks tensor shapes, queue windows, step numbers, and compute modules." },
+      "label": { "displayName": "Machine Label", "purpose": "Marks telemetry, statuses, timestamps, and key commands." },
+      "micro-label": { "displayName": "Dense Machine Label", "purpose": "Marks flow links, station details, and compact panel categories." }
     },
     "shadows": [
       { "name": "signal-ring", "value": "0 0 0 1px #374554", "purpose": "Defines an inactive route dot without lifting its containing surface." },
@@ -97,7 +107,18 @@
       { "name": "state-change", "value": "160ms ease", "purpose": "Navigation color and surface response." },
       { "name": "route-travel", "value": "1.6s linear infinite", "purpose": "Moves the live request signal from Client toward Response while a request is in flight." },
       { "name": "active-signal", "value": "900ms ease-in-out infinite alternate", "purpose": "Breathes the tiny active-stage signal without moving layout." },
-      { "name": "stream-cursor", "value": "650ms step-end infinite", "purpose": "Marks an actively growing streamed response." }
+      { "name": "payload-sequence", "value": "600ms ease-out with 90ms cell stagger", "purpose": "Reveals one or four actual-route payload cells at the active stage." },
+      { "name": "disclosure-turn", "value": "220ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Turns the mechanics disclosure marker between collapsed and expanded states." },
+      { "name": "mechanics-reveal", "value": "360ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Reveals the in-place Mechanics Explorer with opacity, clipping, and a short upward offset." },
+      { "name": "module-state", "value": "opacity 260ms ease, transform 420ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Separates pending, reached, and current compute modules." },
+      { "name": "flow-packet", "value": "700ms cubic-bezier(0.45, 0, 0.55, 1)", "purpose": "Moves a packet across the current mechanics link; the mobile form moves vertically." },
+      { "name": "token-tensor-resolve", "value": "520ms ease-out", "purpose": "Resolves prompt tokens and fills tensor cells in the current module." },
+      { "name": "gpu-compute", "value": "560ms ease-in-out with 80ms column stagger", "purpose": "Lights the simplified GEMM/GPU array." },
+      { "name": "queue-fill", "value": "540ms cubic-bezier(0.16, 1, 0.3, 1) with 110ms slot stagger", "purpose": "Collects arrivals inside the bounded continuous-batching wait window." },
+      { "name": "stream-chunks", "value": "420ms cubic-bezier(0.16, 1, 0.3, 1) with 140ms chunk stagger", "purpose": "Reveals SSE response chunks in order." },
+      { "name": "serial-work", "value": "450ms ease-in-out with 160ms lane stagger", "purpose": "Shows independent realtime calls using successive model lanes." },
+      { "name": "stream-cursor", "value": "650ms step-end infinite", "purpose": "Marks an actively growing real streamed response." },
+      { "name": "reduced-motion-final-state", "value": "0.01ms; modules and links opacity 1, transform none", "purpose": "Makes every mechanics state immediately comprehensible when reduced motion is requested." }
     ],
     "breakpoints": [
       { "name": "desk-two-column", "value": "1180px" },
@@ -155,6 +176,14 @@
       "css": ".ds-route-stage { display:grid; grid-template-columns:32px 1fr; align-items:center; gap:11px; min-height:72px; padding:12px 6px; color:#edf3f8; background:#0b1016; font-family:Onest, sans-serif; } .ds-station { display:grid; place-items:center; width:32px; height:32px; color:#070a0d; background:var(--route, #22d3ee); border:1px solid var(--route, #22d3ee); border-radius:50%; font:600 10px 'JetBrains Mono', monospace; } .ds-route-stage strong { display:block; font-size:12px; } .ds-route-stage small { display:block; margin-top:3px; color:#7f8da0; font:9px 'JetBrains Mono', monospace; } .ds-route-stage:hover .ds-station { filter:brightness(1.08); } .ds-route-stage:focus-within { outline:2px solid var(--route, #22d3ee); outline-offset:3px; }"
     },
     {
+      "name": "Mechanics Explorer",
+      "kind": "custom",
+      "refersTo": "mechanics-explorer",
+      "description": "Progressively disclosed four-step teaching board whose selectable modules explain the active serving strategy.",
+      "html": "<section class=\"ds-mechanics\"><button class=\"ds-mechanics-toggle\" aria-expanded=\"true\"><span><strong>Как это работает</strong><small>requests → wait window → activations [N×T×H] → Future mapping</small></span><i></i></button><div class=\"ds-mechanics-lab\"><header><span>CONTINUOUS BATCHING · ВЫЧИСЛИТЕЛЬНАЯ СХЕМА</span><h3>Короткое окно собирает realtime-запросы</h3></header><div class=\"ds-compute-flow\"><button class=\"ds-compute-module ds-reached\">HTTP ARRIVALS<small>N REQUESTS</small></button><b>→</b><button class=\"ds-compute-module ds-current\">ASYNC QUEUE<small>≤20MS</small></button><b>→</b><button class=\"ds-compute-module\">GPU BATCH<small>[N×T]</small></button><b>→</b><button class=\"ds-compute-module\">HTTP OUTPUTS<small>N FUTURES</small></button></div><p class=\"ds-mechanics-readout\"><strong>02 / 04</strong> Scheduler открывает wait window</p><p class=\"ds-mechanics-note\">Формы tensor упрощены, время растянуто; реальные значения смотрите в telemetry.</p></div></section>",
+      "css": ".ds-mechanics { padding:20px 0 0; color:#edf3f8; background:#0b1016; border:1px solid #25303b; border-radius:12px; font-family:Onest,sans-serif; } .ds-mechanics-toggle { display:flex; justify-content:space-between; width:100%; min-height:52px; padding:13px 20px; color:#98a6b7; background:transparent; border:0; border-bottom:1px solid #25303b; text-align:left; } .ds-mechanics-toggle strong,.ds-mechanics-toggle small { display:block; } .ds-mechanics-toggle strong { color:#edf3f8; font-size:12px; } .ds-mechanics-toggle small { margin-top:2px; color:#7f8da0; font:11px 'JetBrains Mono',monospace; } .ds-mechanics-lab { padding:20px; } .ds-mechanics-lab header span { color:var(--route,#22d3ee); font:11px 'JetBrains Mono',monospace; letter-spacing:.08em; } .ds-mechanics-lab h3 { margin:5px 0 17px; font-size:17px; letter-spacing:-.02em; } .ds-compute-flow { display:grid; grid-template-columns:1fr 40px 1fr 40px 1fr 40px 1fr; align-items:center; } .ds-compute-flow>b { color:#374554; text-align:center; } .ds-compute-module { min-height:142px; padding:14px; color:#edf3f8; background:#0b1016; border:1px solid #25303b; border-radius:9px; text-align:left; opacity:.24; } .ds-compute-module small { display:block; margin-top:10px; color:#7f8da0; font:11px 'JetBrains Mono',monospace; } .ds-compute-module.ds-reached { opacity:.72; } .ds-compute-module.ds-current { opacity:1; background:rgba(34,211,238,.11); border-color:rgba(34,211,238,.62); } .ds-compute-module:focus-visible,.ds-mechanics-toggle:focus-visible { outline:2px solid var(--route,#22d3ee); outline-offset:3px; } .ds-mechanics-readout { color:#98a6b7; font-size:12px; } .ds-mechanics-readout strong { margin-right:18px; color:var(--route,#22d3ee); font:11px 'JetBrains Mono',monospace; } .ds-mechanics-note { color:#7f8da0; font-size:11px; } @media(max-width:620px){.ds-compute-flow{grid-template-columns:1fr;gap:7px}.ds-compute-flow>b{transform:rotate(90deg)}.ds-compute-module{min-height:126px}} @media(prefers-reduced-motion:reduce){.ds-compute-module{opacity:1;transform:none}}"
+    },
+    {
       "name": "Telemetry Row",
       "kind": "custom",
       "refersTo": "panel",
@@ -165,33 +194,39 @@
   ],
   "narrative": {
     "northStar": "The Metro Operations Desk",
-    "overview": "LLM Serving Lab treats inference as a visible transit network rather than a generic chat dashboard. Near-black control surfaces, fine route lines, compact status labels, and instrument-like readouts make the application feel like a calm operations room where the mechanism is always more important than decoration.\n\nThe system is dense but ordered. A strategy selects one colored route through Client, Queue, Model, and Response; the rest of the interface stays neutral so that live state, measured output, and route differences remain legible. Motion is reserved for actual request progress and streaming state, and the same interface remains useful when reduced motion is requested.",
+    "overview": "LLM Serving Lab treats inference as a visible transit network rather than a generic chat dashboard. Near-black control surfaces, fine route lines, compact status labels, and instrument-like readouts create a calm operations room where the serving mechanism remains more important than decoration.\n\nThe system is dense but ordered. A strategy selects one colored route through Client, Queue, Model, and Response; the rest of the interface stays neutral so route differences, generated output, and measured runtime remain legible. A progressively disclosed Mechanics Explorer extends that route into a four-step educational model of tokens, tensors, queues, GPU work, KV cache, and SSE without competing with the primary experiment when collapsed.",
     "keyCharacteristics": [
       "Near-black tonal layers separated by fine structural lines.",
-      "A single mode-specific route color carries state through navigation, controls, and trace stations.",
-      "Sans-serif explanation paired with monospaced endpoints, telemetry, labels, and event time.",
-      "Compact control-desk density with a dominant, observable request route.",
-      "Responsive transformation from horizontal control room to vertical mobile route."
+      "A single mode-specific route color carries state through navigation, controls, traces, and mechanics.",
+      "Sans-serif explanation paired with monospaced endpoints, telemetry, tensor labels, and event time.",
+      "Compact control-desk density with a dominant observable request route.",
+      "Progressive disclosure separates the essential experiment from the deeper four-step explanation.",
+      "Responsive transformation from horizontal control room to vertical mobile flows.",
+      "Simulated educational time is explicitly separated from real telemetry and detected runtime."
     ],
     "rules": [
       { "name": "The One Active Route Rule", "body": "Exactly one strategy color may carry the active interaction state at a time; inactive structure stays neutral.", "section": "colors" },
       { "name": "The Signal Has Meaning Rule", "body": "Saturated colors communicate route identity, health, progress, focus, or failure—not ornament.", "section": "colors" },
-      { "name": "The Two-Language Rule", "body": "Use Onest for concepts and model content; use JetBrains Mono only for machine-readable facts and control metadata.", "section": "typography" },
+      { "name": "The Two-Language Rule", "body": "Use Onest for concepts and model content; use JetBrains Mono for machine-readable facts, representations, and control metadata.", "section": "typography" },
       { "name": "The Route-First Rule", "body": "The observable Client-to-Response path remains above controls and telemetry at every viewport; never bury it below the generated answer.", "section": "layout" },
-      { "name": "The Structural Depth Rule", "body": "Create hierarchy with surface tone and network lines; do not lift ordinary panels with generic shadows.", "section": "elevation" },
-      { "name": "The Station Geometry Rule", "body": "Circles belong to signals and route nodes; content containers remain low-radius rectangles.", "section": "shapes" }
+      { "name": "The Progressive Detail Rule", "body": "Keep the mechanics summary visible in the route panel, but reveal the full educational board only after an explicit “Как это работает” action.", "section": "layout" },
+      { "name": "The Structural Depth Rule", "body": "Create hierarchy with surface tone, opacity, and network lines; do not lift ordinary panels with generic shadows.", "section": "elevation" },
+      { "name": "The Station Geometry Rule", "body": "Circles belong to signals and route nodes; content containers remain low-radius rectangles, while miniature compute representations use only the radius needed to remain legible.", "section": "shapes" },
+      { "name": "The Final-State Motion Rule", "body": "Under reduced motion, every module and link renders fully visible with no intermediate transform; comprehension must not depend on playback.", "section": "components" }
     ],
     "dos": [
-      "Do keep the current mode's route color consistent across navigation, dispatch, focus, trace, and result metadata.",
-      "Do expose measured request state and timings in compact monospaced readouts.",
-      "Do preserve visible keyboard focus, readable contrast, reduced-motion behavior, and the vertical mobile route.",
-      "Do use fine lines and tonal differences to organize dense educational information."
+      "Do keep the current mode's route color consistent across navigation, dispatch, focus, trace, and mechanics.",
+      "Do synchronize expanded mechanics to actual request stages while preserving telemetry as the measured source of truth.",
+      "Do make all four mechanics modules keyboard-operable buttons with a visible selected state.",
+      "Do preserve visible focus, readable contrast, cancellable replay, reduced-motion final state, and vertical mobile flow.",
+      "Do explain token, tensor, queue, GPU, cache, Future, and SSE representations with concise labels and step copy."
     ],
     "donts": [
-      "Don't turn the application into a generic message-bubble chat or a collection of interchangeable analytics cards.",
+      "Don't present educational animation duration, simplified tensor geometry, or visual request count as measured runtime data.",
+      "Don't turn the application into a generic message-bubble chat or interchangeable analytics cards.",
       "Don't add decorative charts, gradients, broad glows, or invented performance claims.",
-      "Don't use multiple route colors as simultaneous decoration; a color must correspond to an actual mode or semantic state.",
-      "Don't replace operational density with oversized marketing spacing or hide the serving mechanism behind the generated text."
+      "Don't autoplay hidden mechanics, leave obsolete timers running, or make motion the only way to understand state.",
+      "Don't clip or horizontally compress the four-step explanation on mobile; stack the flow vertically."
     ]
   }
 }

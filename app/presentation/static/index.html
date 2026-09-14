@@ -73,13 +73,40 @@
             <span class="trace-state" id="trace-state">готов к запуску</span>
           </div>
           <div class="pipeline" id="pipeline">
-            <div class="stage" data-stage="client"><span class="station">A</span><div><strong>Client</strong><small>HTTP request</small></div></div>
+            <div class="stage" data-stage="client"><span class="station">A</span><div><strong>Client</strong><small>HTTP request</small></div><span class="stage-payload" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
             <i aria-hidden="true"></i>
-            <div class="stage" data-stage="queue"><span class="station">B</span><div><strong>Queue</strong><small>ожидание</small></div></div>
+            <div class="stage" data-stage="queue"><span class="station">B</span><div><strong>Queue</strong><small>ожидание</small></div><span class="stage-payload" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
             <i aria-hidden="true"></i>
-            <div class="stage" data-stage="model"><span class="station">C</span><div><strong>Model / GPU</strong><small>generate()</small></div></div>
+            <div class="stage" data-stage="model"><span class="station">C</span><div><strong>Model / GPU</strong><small>generate()</small></div><span class="stage-payload gpu-payload" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
             <i aria-hidden="true"></i>
-            <div class="stage" data-stage="response"><span class="station">D</span><div><strong>Response</strong><small>HTTP body</small></div></div>
+            <div class="stage" data-stage="response"><span class="station">D</span><div><strong>Response</strong><small>HTTP body</small></div><span class="stage-payload response-payload" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
+          </div>
+
+          <button class="mechanics-toggle" id="mechanics-toggle" type="button" aria-expanded="false" aria-controls="mechanics-lab">
+            <span><strong>Как это работает</strong><small id="mechanics-toggle-note">Текст → tokens → tensor → один model call</small></span>
+            <span class="disclosure-mark" aria-hidden="true"></span>
+          </button>
+
+          <div class="mechanics-lab" id="mechanics-lab" hidden>
+            <div class="mechanics-heading">
+              <div>
+                <span id="mechanics-kicker">вычислительная схема</span>
+                <h3 id="mechanics-title">Один запрос, одна матрица</h3>
+                <p id="mechanics-summary"></p>
+              </div>
+              <button class="text-button mechanics-replay" id="mechanics-replay" type="button">Повторить схему</button>
+            </div>
+
+            <div class="mechanics-board" id="mechanics-board" data-step="0" role="group" aria-label="Учебная схема вычисления"></div>
+
+            <div class="mechanics-readout" aria-live="polite" aria-atomic="true">
+              <span id="mechanics-step-number">01 / 04</span>
+              <div><strong id="mechanics-step-title">HTTP-запрос</strong><p id="mechanics-step-copy"></p></div>
+            </div>
+            <div class="mechanics-foot">
+              <p class="mechanics-disclaimer">Это учебный сценарий, а не profiler trace. Выберите этап, чтобы остановить схему. Формы tensor, число примеров и визуальное время упрощены; реальные значения смотрите в telemetry.</p>
+              <p class="mechanics-runtime-note" id="mechanics-runtime-note">Проверяем активный runtime…</p>
+            </div>
           </div>
         </section>
 
