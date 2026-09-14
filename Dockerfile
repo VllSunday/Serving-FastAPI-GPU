@@ -4,7 +4,7 @@ WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
     HF_HOME=/app/.hf_cache \
-    MODEL_NAME=distilgpt2 \
+    MODEL_NAME=Qwen/Qwen2.5-1.5B-Instruct \
     DEVICE=cuda \
     MAX_BATCH_SIZE=8 \
     MAX_WAIT_MS=20

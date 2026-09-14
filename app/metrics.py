@@ -21,7 +21,7 @@ def gpu_snapshot(device: str) -> dict:
     utilization = None
     try:
         utilization = torch.cuda.utilization()
-    except Exception:
+    except (AttributeError, RuntimeError):
         utilization = None
 
     return {

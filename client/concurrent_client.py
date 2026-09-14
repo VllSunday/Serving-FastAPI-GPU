@@ -13,7 +13,7 @@ def percentile(values: list[float], q: float) -> float:
     if not values:
         return 0.0
     ordered = sorted(values)
-    index = min(len(ordered) - 1, max(0, int(round((q / 100) * (len(ordered) - 1)))))
+    index = min(len(ordered) - 1, max(0, round((q / 100) * (len(ordered) - 1))))
     return ordered[index]
 
 
@@ -32,7 +32,7 @@ async def one_request(
                 json={"prompt": prompt, "max_new_tokens": max_new_tokens},
             )
             ok = response.status_code == 200
-        except Exception:
+        except httpx.HTTPError:
             ok = False
         latency_ms = (time.perf_counter() - started) * 1000
         return ok, latency_ms

@@ -23,7 +23,7 @@ def main() -> None:
     print(f"status={response.status_code} client_latency_ms={elapsed_ms:.1f}")
     try:
         print(json.dumps(response.json(), indent=2, ensure_ascii=False))
-    except Exception:
+    except json.JSONDecodeError:
         print(response.text)
 
 

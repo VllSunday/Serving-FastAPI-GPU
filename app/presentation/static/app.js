@@ -47,11 +47,22 @@ const modes = {
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-let currentMode = "realtime";
+const examples = {
+  realtime: "Объясни простыми словами, зачем нужен batching на GPU.",
+  batch: "Объясни FastAPI одним предложением.\nОбъясни CUDA одним предложением.\nОбъясни batching моделей одним предложением.\nОбъясни throughput одним предложением.",
+  dynamic: "Объясни continuous batching одним предложением.",
+  stream: "Коротко объясни, как работает потоковая генерация токенов.",
+};
+const promptValues = { ...examples };
+let currentMode = null;
 let running = false;
 
 function now() {
-  return new Date().toLocaleTimeString("ru-RU", { hour12: false, fractionalSecondDigits: 3 });
+  const date = new Date();
+  const time = [date.getHours(), date.getMinutes(), date.getSeconds()]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(":");
+  return `${time}.${String(date.getMilliseconds()).padStart(3, "0")}`;
 }
 
 function log(message, isError = false) {
@@ -67,17 +78,24 @@ function log(message, isError = false) {
 
 function setMode(mode) {
   if (running) return;
+  if (currentMode) promptValues[currentMode] = $("#prompt").value;
   currentMode = mode;
   const config = modes[mode];
-  $$(".mode-button").forEach((button) => button.classList.toggle("active", button.dataset.mode === mode));
+  document.documentElement.dataset.mode = mode;
+  $$(".mode-button").forEach((button) => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
   $("#endpoint").textContent = config.endpoint;
   $("#mode-title").textContent = config.title;
   $("#mode-summary").textContent = config.summary;
   $("#tradeoff-value").textContent = config.priority;
   $("#prompt-label").textContent = config.promptLabel;
-  $("#run span").textContent = config.button;
+  $("#run-label").textContent = config.button;
   $("#form-hint").textContent = config.hint;
   $("#concurrency-control").hidden = mode !== "dynamic";
+  $("#prompt").value = promptValues[mode];
   $("#observations").replaceChildren(...config.observations.map((item) => {
     const li = document.createElement("li"); li.textContent = item; return li;
   }));
@@ -86,21 +104,16 @@ function setMode(mode) {
     stage.classList.remove("active", "done");
   });
   $("#trace-state").textContent = "готово к запуску";
-  if (mode === "batch" && !$("#prompt").value.includes("\n")) fillExample();
 }
 
 function fillExample() {
-  const examples = {
-    realtime: "Explain why GPU batching improves throughput in simple terms.",
-    batch: "Explain FastAPI in one sentence.\nExplain CUDA in one sentence.\nExplain model batching in one sentence.\nExplain throughput in one sentence.",
-    dynamic: "Explain continuous batching in one sentence",
-    stream: "Write a short explanation of token streaming.",
-  };
+  promptValues[currentMode] = examples[currentMode];
   $("#prompt").value = examples[currentMode];
 }
 
 function resetTrace() {
   $$(".stage").forEach((stage) => stage.classList.remove("active", "done"));
+  $("#pipeline").setAttribute("aria-busy", "true");
 }
 
 function activate(stageName, label) {
@@ -115,6 +128,7 @@ function finishTrace() {
   const active = $(".stage.active");
   if (active) { active.classList.remove("active"); active.classList.add("done"); }
   $("#trace-state").textContent = "завершено";
+  $("#pipeline").setAttribute("aria-busy", "false");
 }
 
 function setMetrics(total = "—", queue = "—", inference = "—", batch = "—") {
@@ -270,11 +284,13 @@ async function run() {
     finishTrace();
   } catch (error) {
     $("#trace-state").textContent = "ошибка";
+    $("#pipeline").setAttribute("aria-busy", "false");
     $("#result-caption").textContent = error.message;
     log(error.message, true);
   } finally {
     running = false;
     $("#run").disabled = false;
+    promptValues[currentMode] = $("#prompt").value;
   }
 }
 

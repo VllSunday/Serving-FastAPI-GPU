@@ -1,118 +1,141 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-mode="realtime">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#080b0f" />
     <title>LLM Serving Lab</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Onest:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <header class="topbar">
-      <a class="brand" href="/" aria-label="LLM Serving Lab">
-        <span class="brand-mark" aria-hidden="true">S</span>
-        <span><strong>Serving Lab</strong><small>FastAPI × PyTorch</small></span>
-      </a>
-      <div class="server-status" aria-live="polite">
-        <span class="status-dot" id="status-dot"></span>
-        <span id="server-status">Проверяем сервер…</span>
-        <a href="/docs" target="_blank" rel="noreferrer">OpenAPI</a>
-      </div>
-    </header>
+    <!--
+      THESIS: Serving is a visible network, not a generic chat dashboard.
+      OWN-WORLD: Near-black control surfaces, route-coded signals, thin network lines, and precise instrument readouts.
+      STORY: Choose a strategy, dispatch a request, watch every stage, then inspect measured output.
+      FIRST VIEWPORT: Compact rail at left; live route dominates the top; experiment, telemetry, and events share the desk below.
+      FORM: Metro operations control room, ranked direction 6; horizontal control-desk staging; seed 704f9ead.
+    -->
+    <a class="skip-link" href="#main-content">К эксперименту</a>
 
-    <div class="workspace">
-      <nav class="mode-nav" aria-label="Стратегии сервинга">
-        <p class="nav-title">Режим</p>
-        <button class="mode-button active" data-mode="realtime">
-          <span class="mode-icon">1</span><span>Realtime<small>один → один</small></span>
-        </button>
-        <button class="mode-button" data-mode="batch">
-          <span class="mode-icon">2</span><span>Offline batch<small>job → polling</small></span>
-        </button>
-        <button class="mode-button" data-mode="dynamic">
-          <span class="mode-icon">3</span><span>Continuous<small>очередь → batch</small></span>
-        </button>
-        <button class="mode-button" data-mode="stream">
-          <span class="mode-icon">4</span><span>Streaming<small>ответ частями</small></span>
-        </button>
-      </nav>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="LLM Serving Lab — главная">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span><strong>Serving Lab</strong><small>Inference control room</small></span>
+        </a>
 
-      <main>
-        <section class="lesson-head">
+        <nav class="mode-nav" aria-label="Стратегии сервинга">
+          <p class="nav-label">Стратегии</p>
+          <button class="mode-button active" data-mode="realtime" aria-pressed="true">
+            <span class="route-dot"></span><span><strong>Realtime</strong><small>один → один</small></span><kbd>1</kbd>
+          </button>
+          <button class="mode-button" data-mode="batch" aria-pressed="false">
+            <span class="route-dot"></span><span><strong>Offline batch</strong><small>job → polling</small></span><kbd>2</kbd>
+          </button>
+          <button class="mode-button" data-mode="dynamic" aria-pressed="false">
+            <span class="route-dot"></span><span><strong>Continuous</strong><small>очередь → batch</small></span><kbd>3</kbd>
+          </button>
+          <button class="mode-button" data-mode="stream" aria-pressed="false">
+            <span class="route-dot"></span><span><strong>Streaming</strong><small>ответ частями</small></span><kbd>4</kbd>
+          </button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <div class="server-status" aria-live="polite">
+            <span class="status-dot" id="status-dot"></span>
+            <span><strong id="server-status">Подключение…</strong><small>model runtime</small></span>
+          </div>
+          <a href="/docs" target="_blank" rel="noreferrer">OpenAPI <span aria-hidden="true">↗</span></a>
+        </div>
+      </aside>
+
+      <main id="main-content">
+        <header class="topbar">
           <div>
             <p class="endpoint" id="endpoint">POST /generate</p>
             <h1 id="mode-title">Online realtime</h1>
-            <p id="mode-summary">Запрос сразу занимает модель и возвращается только после полной генерации.</p>
+            <p id="mode-summary">Запрос занимает модель сразу и возвращается только после полной генерации.</p>
           </div>
-          <div class="mode-fact">
-            <span id="tradeoff-label">Главный приоритет</span>
+          <div class="priority-readout">
+            <span id="tradeoff-label">Приоритет режима</span>
             <strong id="tradeoff-value">минимальная latency</strong>
           </div>
-        </section>
+        </header>
 
         <section class="trace-panel" aria-labelledby="trace-title">
-          <div class="section-line">
-            <h2 id="trace-title">Трасса запроса</h2>
-            <span id="trace-state">готово к запуску</span>
+          <div class="panel-heading">
+            <div><span class="live-mark"><i></i> live route</span><h2 id="trace-title">Путь запроса</h2></div>
+            <span class="trace-state" id="trace-state">готов к запуску</span>
           </div>
           <div class="pipeline" id="pipeline">
-            <div class="stage" data-stage="client"><span>01</span><strong>Client</strong><small>HTTP request</small></div>
+            <div class="stage" data-stage="client"><span class="station">A</span><div><strong>Client</strong><small>HTTP request</small></div></div>
             <i aria-hidden="true"></i>
-            <div class="stage" data-stage="queue"><span>02</span><strong>Queue</strong><small>ожидание</small></div>
+            <div class="stage" data-stage="queue"><span class="station">B</span><div><strong>Queue</strong><small>ожидание</small></div></div>
             <i aria-hidden="true"></i>
-            <div class="stage" data-stage="model"><span>03</span><strong>Model</strong><small>generate()</small></div>
+            <div class="stage" data-stage="model"><span class="station">C</span><div><strong>Model / GPU</strong><small>generate()</small></div></div>
             <i aria-hidden="true"></i>
-            <div class="stage" data-stage="response"><span>04</span><strong>Response</strong><small>HTTP body</small></div>
+            <div class="stage" data-stage="response"><span class="station">D</span><div><strong>Response</strong><small>HTTP body</small></div></div>
           </div>
         </section>
 
-        <div class="lab-grid">
-          <section class="experiment-panel">
-            <div class="section-line">
-              <h2>Эксперимент</h2>
-              <button class="text-button" id="fill-example" type="button">Подставить пример</button>
+        <div class="control-desk">
+          <section class="experiment-panel" aria-labelledby="experiment-title">
+            <div class="panel-heading compact">
+              <div><span>request input</span><h2 id="experiment-title">Эксперимент</h2></div>
+              <button class="text-button" id="fill-example" type="button">Пример</button>
             </div>
 
             <label for="prompt" id="prompt-label">Prompt</label>
-            <textarea id="prompt" rows="5">Explain why GPU batching improves throughput in simple terms.</textarea>
+            <textarea id="prompt" rows="6">Объясни простыми словами, зачем нужен batching на GPU.</textarea>
 
             <div class="controls-row">
-              <label>Новых токенов<input id="max-tokens" type="number" min="1" max="128" value="32" /></label>
+              <label>Новых токенов<input id="max-tokens" type="number" min="1" max="128" value="64" /></label>
               <label id="concurrency-control" hidden>Запросов одновременно<input id="concurrency" type="number" min="2" max="16" value="4" /></label>
             </div>
 
-            <button class="run-button" id="run" type="button"><span>Запустить realtime</span><kbd>Ctrl ↵</kbd></button>
-            <p class="form-hint" id="form-hint">Ответ появится целиком: промежуточных частей клиент не увидит.</p>
+            <button class="run-button" id="run" type="button"><span class="run-signal" aria-hidden="true"></span><span id="run-label">Запустить realtime</span><kbd>Ctrl ↵</kbd></button>
+            <p class="form-hint" id="form-hint">Ответ придёт одним JSON после полной генерации.</p>
           </section>
 
-          <aside class="inspection-panel">
-            <h2>Что наблюдать</h2>
-            <ol id="observations"></ol>
-            <div class="config-readout">
-              <div><span>max batch</span><strong id="max-batch">—</strong></div>
-              <div><span>wait window</span><strong id="wait-window">—</strong></div>
-              <div><span>queue now</span><strong id="queue-size">—</strong></div>
+          <section class="results-panel" aria-live="polite" aria-labelledby="result-title">
+            <div class="panel-heading compact">
+              <div><span>live telemetry</span><h2 id="result-title">Результат</h2></div>
+              <span class="result-caption" id="result-caption">нет запуска</span>
             </div>
+            <div class="metrics" id="metrics">
+              <div><span>total</span><strong>—</strong></div>
+              <div><span>queue</span><strong>—</strong></div>
+              <div><span>inference</span><strong>—</strong></div>
+              <div><span>batch size</span><strong>—</strong></div>
+            </div>
+            <div class="output" id="output"><p class="empty">Ответ модели появится здесь. Трасса сверху покажет, как он был получен.</p></div>
+          </section>
+
+          <aside class="inspector-panel" aria-labelledby="inspector-title">
+            <div class="panel-heading compact">
+              <div><span>mode inspector</span><h2 id="inspector-title">Что наблюдать</h2></div>
+            </div>
+            <ol id="observations"></ol>
+            <dl class="config-readout">
+              <div><dt>max batch</dt><dd id="max-batch">—</dd></div>
+              <div><dt>wait window</dt><dd id="wait-window">—</dd></div>
+              <div><dt>queue now</dt><dd id="queue-size">—</dd></div>
+            </dl>
           </aside>
+
+          <section class="event-log" aria-labelledby="log-title">
+            <div class="panel-heading compact">
+              <div><span>server timeline</span><h2 id="log-title">События</h2></div>
+              <button class="text-button" id="clear-log" type="button">Очистить</button>
+            </div>
+            <div id="log" role="log" aria-live="polite"><p><time>—</time><span>Лаборатория готова</span></p></div>
+          </section>
         </div>
-
-        <section class="results-panel" aria-live="polite">
-          <div class="section-line">
-            <h2>Результат</h2>
-            <span id="result-caption">ещё нет запуска</span>
-          </div>
-          <div class="metrics" id="metrics">
-            <div><span>total</span><strong>—</strong></div>
-            <div><span>queue</span><strong>—</strong></div>
-            <div><span>inference</span><strong>—</strong></div>
-            <div><span>batch size</span><strong>—</strong></div>
-          </div>
-          <div class="output" id="output"><p class="empty">Запустите эксперимент — здесь появится ответ модели и технические детали.</p></div>
-        </section>
-
-        <section class="event-log">
-          <div class="section-line"><h2>Журнал событий</h2><button class="text-button" id="clear-log" type="button">Очистить</button></div>
-          <div id="log" role="log"><p><time>—</time><span>Лаборатория готова</span></p></div>
-        </section>
       </main>
     </div>
     <script src="/static/app.js" defer></script>

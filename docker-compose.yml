@@ -4,7 +4,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MODEL_NAME: ${MODEL_NAME:-distilgpt2}
+      MODEL_NAME: ${MODEL_NAME:-Qwen/Qwen2.5-1.5B-Instruct}
       DEVICE: ${DEVICE:-cuda}
       MAX_BATCH_SIZE: ${MAX_BATCH_SIZE:-8}
       MAX_WAIT_MS: ${MAX_WAIT_MS:-20}

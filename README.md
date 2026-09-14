@@ -79,13 +79,17 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 Настройки из `.env`:
 
 ```dotenv
-MODEL_NAME=distilgpt2
+MODEL_NAME=Qwen/Qwen2.5-1.5B-Instruct
 DEVICE=auto
+SYSTEM_PROMPT=You are a factual assistant demonstrating model inference serving. Answer directly in the same language as the user, using 1-3 concise sentences unless asked otherwise. Never repeat the user's prompt. For machine-learning topics, clearly distinguish inference from training.
 MAX_BATCH_SIZE=8
 MAX_WAIT_MS=20
 DEFAULT_MAX_NEW_TOKENS=64
 MAX_NEW_TOKENS_CAP=128
 ```
+
+Если на GPU достаточно памяти и важнее качество текста, модель можно заменить
+без изменений в коде, например: `MODEL_NAME=Qwen/Qwen2.5-3B-Instruct`.
 
 ## Проверка из терминала
 
@@ -115,4 +119,6 @@ curl http://127.0.0.1:8000/batcher/stats
   `max_new_tokens`. Production engines обычно bucket’ят больше параметров.
 - SSE chunks — куски декодированного текста, а не гарантированно один tokenizer
   token на событие. Это особенность `TextIteratorStreamer`.
-- `distilgpt2` выбран для демонстрации механики, а не качества ответов.
+- Модель по умолчанию — instruction-tuned `Qwen/Qwen2.5-1.5B-Instruct`.
+  Для неё применяется native chat template. Она заметно тяжелее GPT-2 starter,
+  но всё ещё достаточно мала для учебного запуска.

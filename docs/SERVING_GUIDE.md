@@ -134,6 +134,7 @@ model call конкурировать с первым.
 - input tensors переводятся на тот же device, что и модель.
 - для decoder-only GPT-2 используется left padding;
 - отсутствующий pad token заменяется EOS token;
+- instruction-tuned модель получает `system` и `user` через её native chat template;
 - после generation input token ids отрезаются, клиент получает только completion;
 - FP16 используется на CUDA, FP32 — на CPU.
 

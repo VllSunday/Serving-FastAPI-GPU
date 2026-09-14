@@ -5,6 +5,7 @@ import time
 import torch
 
 from app.model.loader import ModelBundle
+from app.model.prompting import format_prompts
 
 
 def _move_to_device(encoded: dict, device: str) -> dict:
@@ -16,7 +17,12 @@ def generate_one(
     prompt: str,
     max_new_tokens: int,
 ) -> tuple[str, float]:
-    encoded = bundle.tokenizer(prompt, return_tensors="pt")
+    formatted, uses_chat_template = format_prompts(bundle.tokenizer, [prompt])
+    encoded = bundle.tokenizer(
+        formatted[0],
+        return_tensors="pt",
+        add_special_tokens=not uses_chat_template,
+    )
     encoded = _move_to_device(encoded, bundle.device)
 
     started = time.perf_counter()
@@ -41,11 +47,13 @@ def generate_batch(
     prompts: list[str],
     max_new_tokens: int,
 ) -> tuple[list[str], float]:
+    formatted, uses_chat_template = format_prompts(bundle.tokenizer, prompts)
     encoded = bundle.tokenizer(
-        prompts,
+        formatted,
         return_tensors="pt",
         padding=True,
         truncation=True,
+        add_special_tokens=not uses_chat_template,
     )
     encoded = _move_to_device(encoded, bundle.device)
 

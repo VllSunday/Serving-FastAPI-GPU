@@ -15,7 +15,7 @@ nvidia-smi
 ```text
 Device: cuda
 GPU: NVIDIA ...
-Model: distilgpt2
+Model: Qwen/Qwen2.5-1.5B-Instruct
 ```
 
 Если CUDA недоступна, будет `Device: cpu`. Сервер всё равно должен работать.

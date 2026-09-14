@@ -9,6 +9,7 @@ from transformers import TextIteratorStreamer
 from app.domain.generation import EngineOutput
 from app.model.inference import generate_batch, generate_one
 from app.model.loader import ModelBundle
+from app.model.prompting import format_prompts
 
 
 class TransformersEngine:
@@ -41,7 +42,12 @@ class TransformersEngine:
             skip_prompt=True,
             skip_special_tokens=True,
         )
-        encoded = self.bundle.tokenizer(prompt, return_tensors="pt")
+        formatted, uses_chat_template = format_prompts(self.bundle.tokenizer, [prompt])
+        encoded = self.bundle.tokenizer(
+            formatted[0],
+            return_tensors="pt",
+            add_special_tokens=not uses_chat_template,
+        )
         encoded = {key: value.to(self.bundle.device) for key, value in encoded.items()}
         errors: list[Exception] = []
 

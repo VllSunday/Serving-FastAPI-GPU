@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-14T18:09:42.0418116+05:00",
+  "title": "Design System: LLM Serving Lab",
+  "extensions": {
+    "colorMeta": {
+      "route-realtime": {
+        "role": "primary",
+        "displayName": "Realtime Cyan",
+        "canonical": "#22d3ee",
+        "tonalRamp": ["oklch(15% 0.055 210)", "oklch(26% 0.075 210)", "oklch(38% 0.095 210)", "oklch(50% 0.115 210)", "oklch(62% 0.135 210)", "oklch(74% 0.125 210)", "oklch(86% 0.08 210)", "oklch(95% 0.035 210)"]
+      },
+      "route-batch": {
+        "role": "secondary",
+        "displayName": "Batch Green",
+        "canonical": "#4ade80",
+        "tonalRamp": ["oklch(15% 0.055 150)", "oklch(26% 0.075 150)", "oklch(38% 0.1 150)", "oklch(50% 0.125 150)", "oklch(62% 0.15 150)", "oklch(74% 0.14 150)", "oklch(86% 0.09 150)", "oklch(95% 0.04 150)"]
+      },
+      "route-dynamic": {
+        "role": "secondary",
+        "displayName": "Dynamic Amber",
+        "canonical": "#fbbf24",
+        "tonalRamp": ["oklch(15% 0.055 85)", "oklch(26% 0.08 85)", "oklch(38% 0.105 85)", "oklch(50% 0.13 85)", "oklch(62% 0.155 85)", "oklch(74% 0.145 85)", "oklch(86% 0.095 85)", "oklch(95% 0.04 85)"]
+      },
+      "route-stream": {
+        "role": "secondary",
+        "displayName": "Streaming Blue",
+        "canonical": "#60a5fa",
+        "tonalRamp": ["oklch(15% 0.05 255)", "oklch(26% 0.07 255)", "oklch(38% 0.09 255)", "oklch(50% 0.11 255)", "oklch(62% 0.13 255)", "oklch(74% 0.12 255)", "oklch(86% 0.075 255)", "oklch(95% 0.03 255)"]
+      },
+      "signal-danger": {
+        "role": "tertiary",
+        "displayName": "Signal Danger",
+        "canonical": "#fb7185",
+        "tonalRamp": ["oklch(15% 0.05 20)", "oklch(26% 0.075 20)", "oklch(38% 0.1 20)", "oklch(50% 0.125 20)", "oklch(62% 0.15 20)", "oklch(74% 0.14 20)", "oklch(86% 0.085 20)", "oklch(95% 0.035 20)"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Black Glass Canvas",
+        "canonical": "#070a0d",
+        "tonalRamp": ["oklch(15% 0.01 245)", "oklch(26% 0.01 245)", "oklch(38% 0.01 245)", "oklch(50% 0.01 245)", "oklch(62% 0.009 245)", "oklch(74% 0.008 245)", "oklch(86% 0.006 245)", "oklch(95% 0.003 245)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Control Surface",
+        "canonical": "#0b1016",
+        "tonalRamp": ["oklch(15% 0.014 245)", "oklch(26% 0.014 245)", "oklch(38% 0.013 245)", "oklch(50% 0.012 245)", "oklch(62% 0.01 245)", "oklch(74% 0.008 245)", "oklch(86% 0.006 245)", "oklch(95% 0.003 245)"]
+      },
+      "surface-hover": {
+        "role": "neutral",
+        "displayName": "Surface Hover",
+        "canonical": "#141c25",
+        "tonalRamp": ["oklch(15% 0.021 245)", "oklch(26% 0.021 245)", "oklch(38% 0.019 245)", "oklch(50% 0.017 245)", "oklch(62% 0.014 245)", "oklch(74% 0.01 245)", "oklch(86% 0.006 245)", "oklch(95% 0.003 245)"]
+      },
+      "network-line": {
+        "role": "neutral",
+        "displayName": "Network Line",
+        "canonical": "#25303b",
+        "tonalRamp": ["oklch(15% 0.025 245)", "oklch(26% 0.025 245)", "oklch(38% 0.023 245)", "oklch(50% 0.02 245)", "oklch(62% 0.016 245)", "oklch(74% 0.011 245)", "oklch(86% 0.007 245)", "oklch(95% 0.003 245)"]
+      },
+      "network-line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Network Line",
+        "canonical": "#374554",
+        "tonalRamp": ["oklch(15% 0.03 245)", "oklch(26% 0.03 245)", "oklch(38% 0.028 245)", "oklch(50% 0.024 245)", "oklch(62% 0.019 245)", "oklch(74% 0.013 245)", "oklch(86% 0.008 245)", "oklch(95% 0.003 245)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Instrument Ink",
+        "canonical": "#edf3f8",
+        "tonalRamp": ["oklch(15% 0.012 245)", "oklch(26% 0.012 245)", "oklch(38% 0.011 245)", "oklch(50% 0.01 245)", "oklch(62% 0.008 245)", "oklch(74% 0.006 245)", "oklch(86% 0.004 245)", "oklch(95% 0.002 245)"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Instrument Ink",
+        "canonical": "#98a6b7",
+        "tonalRamp": ["oklch(15% 0.025 245)", "oklch(26% 0.025 245)", "oklch(38% 0.023 245)", "oklch(50% 0.02 245)", "oklch(62% 0.016 245)", "oklch(74% 0.012 245)", "oklch(86% 0.007 245)", "oklch(95% 0.003 245)"]
+      },
+      "ink-quiet": {
+        "role": "neutral",
+        "displayName": "Quiet Instrument Ink",
+        "canonical": "#7f8da0",
+        "tonalRamp": ["oklch(15% 0.028 245)", "oklch(26% 0.028 245)", "oklch(38% 0.025 245)", "oklch(50% 0.022 245)", "oklch(62% 0.017 245)", "oklch(74% 0.012 245)", "oklch(86% 0.007 245)", "oklch(95% 0.003 245)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Operating Mode Display", "purpose": "Names the selected serving strategy at the top of the work area." },
+      "headline": { "displayName": "Instrument Headline", "purpose": "Names compact trace and control-desk panels." },
+      "body": { "displayName": "Explanatory Body", "purpose": "Explains tradeoffs and carries generated model content." },
+      "label": { "displayName": "Machine Label", "purpose": "Marks endpoints, telemetry, statuses, timestamps, and key commands." }
+    },
+    "shadows": [
+      { "name": "signal-ring", "value": "0 0 0 1px #374554", "purpose": "Defines an inactive route dot without lifting its containing surface." },
+      { "name": "health-halo", "value": "0 0 0 3px rgba(74, 222, 128, 0.1)", "purpose": "Gives the tiny healthy-runtime signal enough presence to be noticed." }
+    ],
+    "motion": [
+      { "name": "state-change", "value": "160ms ease", "purpose": "Navigation color and surface response." },
+      { "name": "route-travel", "value": "1.6s linear infinite", "purpose": "Moves the live request signal from Client toward Response while a request is in flight." },
+      { "name": "active-signal", "value": "900ms ease-in-out infinite alternate", "purpose": "Breathes the tiny active-stage signal without moving layout." },
+      { "name": "stream-cursor", "value": "650ms step-end infinite", "purpose": "Marks an actively growing streamed response." }
+    ],
+    "breakpoints": [
+      { "name": "desk-two-column", "value": "1180px" },
+      { "name": "top-rail", "value": "840px" },
+      { "name": "vertical-route", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Dispatch Button",
+      "kind": "button",
+      "refersTo": "button-dispatch",
+      "description": "Primary full-width action for dispatching the current serving experiment.",
+      "html": "<button class=\"ds-dispatch\"><span class=\"ds-dispatch-signal\" aria-hidden=\"true\"></span><span>Запустить realtime</span><kbd>Ctrl ↵</kbd></button>",
+      "css": ".ds-dispatch { display:grid; grid-template-columns:8px 1fr auto; align-items:center; gap:11px; width:100%; min-height:50px; padding:10px 14px; color:#071014; background:var(--route, #22d3ee); border:0; border-radius:7px; font:700 13px Onest, sans-serif; text-align:left; cursor:pointer; transition:filter .15s ease, transform .15s ease; } .ds-dispatch-signal { width:7px; height:7px; background:#071014; border-radius:50%; } .ds-dispatch kbd { color:rgba(7,16,20,.62); font:10px 'JetBrains Mono', monospace; } .ds-dispatch:hover { filter:brightness(1.08); } .ds-dispatch:active { transform:translateY(1px); } .ds-dispatch:focus-visible { outline:2px solid var(--route, #22d3ee); outline-offset:3px; }"
+    },
+    {
+      "name": "Text Action",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Quiet utility action used for examples and event-log clearing.",
+      "html": "<button class=\"ds-text-action\">Пример</button>",
+      "css": ".ds-text-action { min-height:44px; padding:6px 4px; color:var(--route, #22d3ee); background:transparent; border:0; border-radius:7px; font:500 11px 'JetBrains Mono', monospace; cursor:pointer; } .ds-text-action:hover { color:#edf3f8; } .ds-text-action:active { transform:translateY(1px); } .ds-text-action:focus-visible { outline:2px solid var(--route, #22d3ee); outline-offset:3px; }"
+    },
+    {
+      "name": "Prompt Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Monospaced prompt editor inside the experiment panel.",
+      "html": "<label class=\"ds-field-label\">Prompt<textarea class=\"ds-field\" rows=\"4\">Объясни, зачем нужен batching на GPU.</textarea></label>",
+      "css": ".ds-field-label { display:block; color:#98a6b7; font:11px Onest, sans-serif; } .ds-field { display:block; width:100%; min-height:120px; margin-top:8px; padding:13px 14px; color:#edf3f8; background:#080c11; border:1px solid #374554; border-radius:7px; outline:0; resize:vertical; font:12px/1.65 'JetBrains Mono', monospace; transition:border-color .15s ease, background .15s ease; } .ds-field:hover { border-color:#485769; } .ds-field:focus-visible { border-color:var(--route, #22d3ee); background:#0a0f15; outline:2px solid var(--route, #22d3ee); outline-offset:3px; }"
+    },
+    {
+      "name": "Active Strategy Item",
+      "kind": "nav",
+      "refersTo": "navigation-item-active",
+      "description": "Selected serving route in the strategy rail.",
+      "html": "<button class=\"ds-mode-item\" aria-pressed=\"true\"><span class=\"ds-mode-dot\"></span><span><strong>Continuous</strong><small>очередь → batch</small></span><kbd>3</kbd></button>",
+      "css": ".ds-mode-item { position:relative; display:grid; grid-template-columns:10px 1fr auto; align-items:center; gap:11px; width:100%; min-height:58px; padding:8px 10px; color:#edf3f8; background:rgba(34,211,238,.11); border:0; border-radius:8px; text-align:left; cursor:pointer; } .ds-mode-item::after { content:''; position:absolute; inset:10px auto 10px -8px; width:2px; background:var(--route, #22d3ee); } .ds-mode-dot { width:8px; height:8px; background:var(--route, #22d3ee); border:2px solid #080c11; border-radius:50%; box-shadow:0 0 0 1px var(--route, #22d3ee); } .ds-mode-item strong { display:block; font:600 13px Onest, sans-serif; } .ds-mode-item small { display:block; margin-top:2px; color:#7f8da0; font:10px 'JetBrains Mono', monospace; } .ds-mode-item kbd { color:#7f8da0; font:10px 'JetBrains Mono', monospace; } .ds-mode-item:hover { background:#141c25; } .ds-mode-item:focus-visible { outline:2px solid var(--route, #22d3ee); outline-offset:3px; }"
+    },
+    {
+      "name": "Control Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Flat bordered surface shared by experiment, telemetry, inspector, and event sections.",
+      "html": "<section class=\"ds-panel\"><span>LIVE TELEMETRY</span><h2>Результат</h2><p>Измеренные данные появятся после запуска.</p></section>",
+      "css": ".ds-panel { padding:20px; color:#edf3f8; background:#0b1016; border:1px solid #25303b; border-radius:12px; font:14px/1.5 Onest, sans-serif; } .ds-panel > span { color:#7f8da0; font:9px 'JetBrains Mono', monospace; letter-spacing:.1em; } .ds-panel h2 { margin:5px 0 14px; font-size:14px; } .ds-panel p { margin:0; color:#98a6b7; font-size:11px; } .ds-panel:hover { border-color:#374554; } .ds-panel:focus-within { border-color:var(--route, #22d3ee); }"
+    },
+    {
+      "name": "Active Route Station",
+      "kind": "custom",
+      "refersTo": "route-station-active",
+      "description": "Signature metro node for the stage currently handling a request.",
+      "html": "<div class=\"ds-route-stage\"><span class=\"ds-station\">C</span><span><strong>Model / GPU</strong><small>generate()</small></span></div>",
+      "css": ".ds-route-stage { display:grid; grid-template-columns:32px 1fr; align-items:center; gap:11px; min-height:72px; padding:12px 6px; color:#edf3f8; background:#0b1016; font-family:Onest, sans-serif; } .ds-station { display:grid; place-items:center; width:32px; height:32px; color:#070a0d; background:var(--route, #22d3ee); border:1px solid var(--route, #22d3ee); border-radius:50%; font:600 10px 'JetBrains Mono', monospace; } .ds-route-stage strong { display:block; font-size:12px; } .ds-route-stage small { display:block; margin-top:3px; color:#7f8da0; font:9px 'JetBrains Mono', monospace; } .ds-route-stage:hover .ds-station { filter:brightness(1.08); } .ds-route-stage:focus-within { outline:2px solid var(--route, #22d3ee); outline-offset:3px; }"
+    },
+    {
+      "name": "Telemetry Row",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Border-separated instrument readout for timing and batch measurements.",
+      "html": "<div class=\"ds-metrics\"><div><span>total</span><strong>412.8 ms</strong></div><div><span>queue</span><strong>18.2 ms</strong></div><div><span>inference</span><strong>394.6 ms</strong></div><div><span>batch</span><strong>4</strong></div></div>",
+      "css": ".ds-metrics { display:grid; grid-template-columns:repeat(4,1fr); color:#edf3f8; background:#0b1016; border-top:1px solid #25303b; border-bottom:1px solid #25303b; } .ds-metrics div { min-width:0; padding:12px 10px; border-right:1px solid #25303b; } .ds-metrics div:last-child { border-right:0; } .ds-metrics span, .ds-metrics strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:'JetBrains Mono', monospace; } .ds-metrics span { color:#7f8da0; font-size:10px; } .ds-metrics strong { margin-top:6px; font-size:12px; } .ds-metrics div:hover strong { color:var(--route, #22d3ee); } .ds-metrics:focus-within { outline:2px solid var(--route, #22d3ee); outline-offset:3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Metro Operations Desk",
+    "overview": "LLM Serving Lab treats inference as a visible transit network rather than a generic chat dashboard. Near-black control surfaces, fine route lines, compact status labels, and instrument-like readouts make the application feel like a calm operations room where the mechanism is always more important than decoration.\n\nThe system is dense but ordered. A strategy selects one colored route through Client, Queue, Model, and Response; the rest of the interface stays neutral so that live state, measured output, and route differences remain legible. Motion is reserved for actual request progress and streaming state, and the same interface remains useful when reduced motion is requested.",
+    "keyCharacteristics": [
+      "Near-black tonal layers separated by fine structural lines.",
+      "A single mode-specific route color carries state through navigation, controls, and trace stations.",
+      "Sans-serif explanation paired with monospaced endpoints, telemetry, labels, and event time.",
+      "Compact control-desk density with a dominant, observable request route.",
+      "Responsive transformation from horizontal control room to vertical mobile route."
+    ],
+    "rules": [
+      { "name": "The One Active Route Rule", "body": "Exactly one strategy color may carry the active interaction state at a time; inactive structure stays neutral.", "section": "colors" },
+      { "name": "The Signal Has Meaning Rule", "body": "Saturated colors communicate route identity, health, progress, focus, or failure—not ornament.", "section": "colors" },
+      { "name": "The Two-Language Rule", "body": "Use Onest for concepts and model content; use JetBrains Mono only for machine-readable facts and control metadata.", "section": "typography" },
+      { "name": "The Route-First Rule", "body": "The observable Client-to-Response path remains above controls and telemetry at every viewport; never bury it below the generated answer.", "section": "layout" },
+      { "name": "The Structural Depth Rule", "body": "Create hierarchy with surface tone and network lines; do not lift ordinary panels with generic shadows.", "section": "elevation" },
+      { "name": "The Station Geometry Rule", "body": "Circles belong to signals and route nodes; content containers remain low-radius rectangles.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do keep the current mode's route color consistent across navigation, dispatch, focus, trace, and result metadata.",
+      "Do expose measured request state and timings in compact monospaced readouts.",
+      "Do preserve visible keyboard focus, readable contrast, reduced-motion behavior, and the vertical mobile route.",
+      "Do use fine lines and tonal differences to organize dense educational information."
+    ],
+    "donts": [
+      "Don't turn the application into a generic message-bubble chat or a collection of interchangeable analytics cards.",
+      "Don't add decorative charts, gradients, broad glows, or invented performance claims.",
+      "Don't use multiple route colors as simultaneous decoration; a color must correspond to an actual mode or semantic state.",
+      "Don't replace operational density with oversized marketing spacing or hide the serving mechanism behind the generated text."
+    ]
+  }
+}
