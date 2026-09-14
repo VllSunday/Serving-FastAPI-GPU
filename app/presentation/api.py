@@ -128,11 +128,10 @@ def get_batch(job_id: str, request: Request) -> BatchJobResponse:
     response_model=BatchGenerateResponse,
     include_in_schema=False,
 )
-async def legacy_generate_batch(
+async def generate_batch_sync(
     payload: BatchGenerateRequest,
     request: Request,
 ) -> BatchGenerateResponse:
-    """Старый маршрут из исходного репозитория преподавателя."""
     token_limit = clamp_tokens(payload.max_new_tokens)
     commands = [GenerationCommand(prompt, token_limit) for prompt in payload.prompts]
     submitted = await services(request).offline_batch.submit(commands)
@@ -170,7 +169,6 @@ async def generate_dinamic_alias(
     payload: GenerateRequest,
     request: Request,
 ) -> GenerateResponse:
-    """Alias для написания, которое используется в тексте задания."""
     return await dynamic_response(payload, request)
 
 

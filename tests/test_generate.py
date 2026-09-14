@@ -38,7 +38,7 @@ def test_generate_stream(client):
     assert "event: done" in chunks
 
 
-def test_assignment_spelling_alias(client):
+def test_dinamic_spelling_alias(client):
     response = client.post(
         "/generate/dinamic",
         json={"prompt": "Hello", "max_new_tokens": 4},

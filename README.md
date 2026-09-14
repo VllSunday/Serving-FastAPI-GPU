@@ -19,8 +19,8 @@ GPU-вычисления и ответа. OpenAPI остаётся на `/docs`.
 | `POST /generate/dynamic` | независимые requests → короткое окно → общий batch | throughput при realtime API |
 | `POST /generate/stream` | generation thread → SSE `token` events | time to first token |
 
-`POST /generate/dinamic` оставлен как скрытый alias для написания из задания.
-Старый `POST /generate/batch` тоже работает, но новый offline-контракт — `/batch`.
+`POST /generate/dinamic` поддерживается как скрытый alias.
+Синхронный `POST /generate/batch` тоже работает, но основной offline-контракт — `/batch`.
 
 ## Clean architecture
 
@@ -123,5 +123,5 @@ curl http://127.0.0.1:8000/batcher/stats
 - SSE chunks — куски декодированного текста, а не гарантированно один tokenizer
   token на событие. Это особенность `TextIteratorStreamer`.
 - Модель по умолчанию — instruction-tuned `Qwen/Qwen2.5-1.5B-Instruct`.
-  Для неё применяется native chat template. Она заметно тяжелее GPT-2 starter,
-  но всё ещё достаточно мала для учебного запуска.
+  Для неё применяется native chat template. Она заметно тяжелее базовой GPT-2,
+  но всё ещё достаточно мала для локального учебного запуска.
